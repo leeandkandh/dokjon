@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<section class="hero" aria-label="메인 배너">
+    <span class="hero-badge">
+        <span class="hero-badge-dot" aria-hidden="true"></span>SEASON 2026 LIVE ARENA
+    </span>
+    <img class="hero-image" src="{% static 'images/20260922_main.png' %}" alt="독존 - 보수와 민주가 만나는 정치 토론 배틀 아레나">
+</section>
+
+{% comment %}
+바로가기(quick-menu) 카드 — 사용자 요청으로 화면에서 숨김 (2026-09-22)
+나중에 다시 쓸 수도 있어서 삭제하지 않고 주석 처리만 해둠.
+{% endcomment %}
+{% comment %}
+<nav class="quick-menu" aria-label="바로가기 메뉴">
+    <a href="#" class="quick-card quick-conservative">
+        <span class="quick-icon" aria-hidden="true">🏛️</span>
+        <span class="quick-title">보수</span>
+        <span class="quick-desc">대한민국을 지키는 힘</span>
+    </a>
+    <a href="#" class="quick-card quick-democrat">
+        <span class="quick-icon" aria-hidden="true">🏛️</span>
+        <span class="quick-title">민주</span>
+        <span class="quick-desc">함께 만들어가는 내일</span>
+    </a>
+    <a href="#" class="quick-card quick-ilgito">
+        <span class="quick-icon" aria-hidden="true">⚔️</span>
+        <span class="quick-title">일기토</span>
+        <span class="quick-desc">상대진영에 도전하세요</span>
+    </a>
+    <a href="#" class="quick-card quick-general">
+        <span class="quick-icon" aria-hidden="true">💬</span>
+        <span class="quick-title">일반</span>
+        <span class="quick-desc">자유롭게 이야기해요</span>
+    </a>
+    <a href="#" class="quick-card quick-finance">
+        <span class="quick-icon" aria-hidden="true">📈</span>
+        <span class="quick-title">금융</span>
+        <span class="quick-desc">주식과 재테크 이야기</span>
+    </a>
+</nav>
+{% endcomment %}
+
+<section class="party-ratio" aria-label="회원 진영 비율 (보수 {{ conservative_percent }}%, 민주 {{ democrat_percent }}%)">
+    {% comment %}
+    가입자 진영 비율 바. 실제 회원가입 데이터(User.party)를 집계한 값입니다
+    (core/views.py의 home 참고). 참고 디자인에 있던 "지지 투표" 버튼은
+    아직 투표 기능 자체가 없어서 넣지 않았고, 대신 "회원가입 때 고른 진영 통계"라는
+    걸 명확히 밝히는 안내문을 아래에 달았습니다.
+    {% endcomment %}
+    <div class="party-ratio-head">
+        <div class="party-ratio-side">
+            <span class="party-ratio-dot party-ratio-dot-conservative" aria-hidden="true"></span>
+            <span class="party-ratio-name">보수 진영</span>
+            <strong class="party-ratio-num party-ratio-num-conservative">{{ conservative_percent }}%</strong>
+        </div>
+        <span class="party-ratio-vs">VS</span>
+        <div class="party-ratio-side party-ratio-side-right">
+            <strong class="party-ratio-num party-ratio-num-democrat">{{ democrat_percent }}%</strong>
+            <span class="party-ratio-name">민주 진영</span>
+            <span class="party-ratio-dot party-ratio-dot-democrat" aria-hidden="true"></span>
+        </div>
+    </div>
+    <div class="party-ratio-bar">
+        <div class="party-ratio-fill party-ratio-fill-conservative" data-target-width="{{ conservative_percent }}" style="width: 0%;"></div>
+        <div class="party-ratio-fill party-ratio-fill-democrat" data-target-width="{{ democrat_percent }}" style="width: 0%;"></div>
+    </div>
+    <p class="party-ratio-note">전체 회원 {{ total_member_count }}명이 회원가입 때 고른 진영 기준입니다</p>
+</section>
+
+<section class="arena-grid">
+    <article class="main-card" aria-labelledby="conservative-heading">
+        <h2 id="conservative-heading"><span class="dot dot-red"></span>보수 아레나 최신글</h2>
+        {% if conservative_posts %}
+        <ul class="ranking-list">
+            {% for post in conservative_posts %}
+            <li><a href="{% url 'boards:post_detail' post.board.slug post.pk %}">{{ post.title }}</a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="main-card-empty">아직 게시글이 없습니다.</p>
+        {% endif %}
+    </article>
+
+    <article class="main-card" aria-labelledby="ilgito-heading">
+        <h2 id="ilgito-heading"><span class="dot dot-purple"></span>오늘의 끝장 일기토</h2>
+        {% if current_duel %}
+        <div class="duel-widget duel-widget-live duel-widget-compact">
+            <p class="duel-widget-badge">
+                <span class="duel-widget-badge-dot" aria-hidden="true"></span>LIVE 1:1 일기토 챔피언십
+            </p>
+            <p class="duel-widget-topic"><a href="{% url 'duels:duel_detail' current_duel.pk %}">{{ current_duel.topic }}</a></p>
+            <div class="duel-widget-sides">
+                <div class="duel-side duel-side-challenger">
+                    <span class="duel-side-name">{{ current_duel.challenger.nickname }}</span>
+                    <span class="duel-side-percent">{{ current_duel.challenger_percent }}%</span>
+                </div>
+                <span class="duel-widget-vs">VS</span>
+                <div class="duel-side duel-side-opponent">
+                    <span class="duel-side-percent">{{ current_duel.opponent_percent }}%</span>
+                    <span class="duel-side-name">{{ current_duel.opponent.nickname }}</span>
+                </div>
+            </div>
+            <div class="duel-widget-bar">
+                <div class="duel-widget-bar-fill duel-widget-bar-fill-challenger" style="width: {{ current_duel.challenger_percent }}%;"></div>
+                <div class="duel-widget-bar-fill duel-widget-bar-fill-opponent" style="width: {{ current_duel.opponent_percent }}%;"></div>
+            </div>
+            <p class="duel-widget-countdown" data-duel-countdown="{{ current_duel.seconds_remaining }}">
+                투표 마감까지 <strong>{{ current_duel.seconds_remaining }}초</strong>
+            </p>
+            <a href="{% url 'duels:duel_detail' current_duel.pk %}" class="btn btn-primary duel-widget-vote-btn">투표하러 가기</a>
+        </div>
+        {% else %}
+        <p class="main-card-empty">현재 진행 중인 일기토가 없습니다. <a href="{% url 'duels:duel_list' %}">일기토 전체보기</a></p>
+        {% endif %}
+    </article>
+
+    <article class="main-card" aria-labelledby="democrat-heading">
+        <h2 id="democrat-heading"><span class="dot dot-blue"></span>민주 아레나 최신글</h2>
+        {% if democrat_posts %}
+        <ul class="ranking-list">
+            {% for post in democrat_posts %}
+            <li><a href="{% url 'boards:post_detail' post.board.slug post.pk %}">{{ post.title }}</a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="main-card-empty">아직 게시글이 없습니다.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="main-card main-card-wide" aria-labelledby="top-posts-heading">
+    <h2 id="top-posts-heading"><span class="dot dot-gold"></span>실시간 통합 랭킹 BEST</h2>
+    {% if top_posts %}
+    <ol class="ranking-list ranking-list-numbered">
+        {% for post in top_posts %}
+        <li>
+            <span class="ranking-rank">{{ forloop.counter }}</span>
+            <a href="{% url 'boards:post_detail' post.board.slug post.pk %}">{{ post.title }}</a>
+            <span class="ranking-meta">{{ post.board.name }} · 조회 {{ post.view_count }}</span>
+        </li>
+        {% endfor %}
+    </ol>
+    {% else %}
+    <p class="ranking-empty">아직 게시글이 없습니다.</p>
+    {% endif %}
+</section>
+
+<section class="arena-grid">
+    <article class="main-card" aria-labelledby="honor-heading">
+        <h2 id="honor-heading"><span class="dot dot-gold"></span>독존 명예의 전당</h2>
+        {% if hall_of_fame %}
+        <ol class="ranking-list ranking-list-numbered">
+            {% for member in hall_of_fame %}
+            <li>
+                <span class="ranking-rank">{{ forloop.counter }}</span>
+                <span class="author-badge">
+                    {{ member.nickname }}
+                    <span class="rank-chip">{{ member.rank_name }}</span>
+                    {% if member.duel_record %}<span class="record-chip">{{ member.duel_record }}</span>{% endif %}
+                </span>
+                <span class="ranking-meta">{{ member.points }}P</span>
+            </li>
+            {% endfor %}
+        </ol>
+        {% else %}
+        <p class="main-card-empty">아직 포인트를 쌓은 회원이 없습니다. 글쓰기·댓글·추천·일기토로 포인트를 모아보세요!</p>
+        {% endif %}
+    </article>
+
+    <article class="main-card main-card-soon" aria-labelledby="factcheck-heading">
+        <h2 id="factcheck-heading"><span class="dot dot-teal"></span>실시간 팩트체크 검증대</h2>
+        <p class="main-card-soon-badge">준비 중</p>
+        <p class="main-card-empty">글이나 주장에 대한 사실 검증 기능은 아직 설계 전입니다.</p>
+    </article>
+
+    <article class="main-card main-card-soon" aria-labelledby="poll-heading">
+        <h2 id="poll-heading"><span class="dot dot-purple"></span>오늘의 즉석 한 줄 여론조사</h2>
+        <p class="main-card-soon-badge">준비 중</p>
+        <p class="main-card-empty">짧은 설문/투표 기능은 아직 설계 전입니다.</p>
+    </article>
+</section>
+{% endblock %}

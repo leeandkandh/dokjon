@@ -1,0 +1,30 @@
+{% load static %}
+{% comment %}
+TOP 영역: 로고(이미지) + 태그라인 + 회원 상태별 버튼
+로고는 텍스트 대신 사용자가 제공한 브랜드 이미지(static/images/logo.png)를 사용합니다.
+태그라인은 좁은 화면에서는 숨기고(공간 부족) 태블릿 이상에서만 보여줍니다.
+{% endcomment %}
+<div class="top-inner">
+    <a href="{% url 'core:home' %}" class="logo" aria-label="독존 홈으로 이동">
+        <img src="{% static 'images/logo.png' %}" alt="독존" class="logo-image">
+        <span class="logo-tagline">뜻을 세우고, 독존하라</span>
+    </a>
+
+    <div class="top-actions">
+        {% if request.user.is_authenticated %}
+            <span class="top-nickname">{{ request.user.username }}</span>
+            <span class="top-grade">일반회원</span>
+            <a href="#" class="top-link">마이페이지</a>
+            <a href="#" class="top-link">개인정보 수정</a>
+            <a href="#" class="top-link">로그아웃</a>
+        {% else %}
+            <a href="{% url 'login' %}" class="btn btn-ghost">로그인</a>
+            <a href="{% url 'accounts:signup' %}" class="btn btn-primary">회원가입</a>
+        {% endif %}
+    </div>
+
+    <button type="button" class="gnb-toggle" aria-expanded="false" aria-controls="gnb-list">
+        <span class="sr-only">메뉴 열기</span>
+        <span class="gnb-toggle-bar"></span>
+    </button>
+</div>

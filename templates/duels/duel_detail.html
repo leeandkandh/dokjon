@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<article class="duel-detail">
+    <header class="post-detail-header">
+        <p class="post-detail-board"><a href="{% url 'duels:duel_list' %}">일기토</a></p>
+        <h1 class="post-detail-title">{{ duel.topic }}</h1>
+        {% if duel.description %}<p class="duel-detail-desc">{{ duel.description }}</p>{% endif %}
+        <div class="post-detail-meta">
+            <span>{{ duel.get_status_display }}</span>
+            <span>{{ duel.start_at|date:"Y.m.d H:i" }} ~ {{ duel.end_at|date:"Y.m.d H:i" }}</span>
+            <span>총 투표 {{ duel.total_votes }}표</span>
+        </div>
+    </header>
+
+    <div class="duel-widget-sides">
+        <div class="duel-side duel-side-challenger">
+            <span class="duel-side-name">{{ duel.challenger.nickname }}</span>
+            <span class="rank-chip">{{ duel.challenger.rank_name }}</span>
+            {% if duel.challenger.duel_record %}<span class="record-chip">{{ duel.challenger.duel_record }}</span>{% endif %}
+            <span class="duel-side-percent">{{ duel.challenger_percent }}% ({{ duel.challenger_votes }}표)</span>
+        </div>
+        <span class="duel-widget-vs">VS</span>
+        <div class="duel-side duel-side-opponent">
+            <span class="duel-side-percent">{{ duel.opponent_percent }}% ({{ duel.opponent_votes }}표)</span>
+            {% if duel.opponent.duel_record %}<span class="record-chip">{{ duel.opponent.duel_record }}</span>{% endif %}
+            <span class="rank-chip">{{ duel.opponent.rank_name }}</span>
+            <span class="duel-side-name">{{ duel.opponent.nickname }}</span>
+        </div>
+    </div>
+
+    <div class="duel-widget-bar">
+        <div class="duel-widget-bar-fill duel-widget-bar-fill-challenger" style="width: {{ duel.challenger_percent }}%;"></div>
+        <div class="duel-widget-bar-fill duel-widget-bar-fill-opponent" style="width: {{ duel.opponent_percent }}%;"></div>
+    </div>
+
+    {% if duel.status == 'finished' %}
+    <p class="duel-result">
+        {% if duel.winner %}🏆 {{ duel.winner.nickname }} 승리{% else %}무승부로 종료되었습니다{% endif %}
+    </p>
+    {% elif user_vote %}
+    <p class="duel-result">이미 "{{ user_vote.get_side_display }}"에 투표하셨습니다. 결과는 마감 후 확정됩니다.</p>
+    {% elif duel.is_voting_open %}
+    <p class="duel-widget-countdown" data-duel-countdown="{{ duel.seconds_remaining }}">
+        투표 마감까지 <strong>{{ duel.seconds_remaining }}초</strong>
+    </p>
+        {% if request.user.is_authenticated %}
+        <form action="{% url 'duels:duel_vote' duel.pk %}" method="post" class="duel-vote-form">
+            {% csrf_token %}
+            <button type="submit" name="side" value="challenger" class="btn btn-primary">{{ duel.challenger.nickname }}에게 투표</button>
+            <button type="submit" name="side" value="opponent" class="btn btn-primary">{{ duel.opponent.nickname }}에게 투표</button>
+        </form>
+        {% else %}
+        <p class="comment-login-notice"><a href="{% url 'login' %}">로그인</a> 후 투표할 수 있습니다.</p>
+        {% endif %}
+    {% else %}
+    <p class="duel-result">아직 투표가 시작되지 않았습니다.</p>
+    {% endif %}
+
+    <div class="post-detail-actions">
+        <a href="{% url 'duels:duel_list' %}" class="btn btn-ghost">목록</a>
+    </div>
+</article>
+{% endblock %}

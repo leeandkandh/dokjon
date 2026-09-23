@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="post-form-page">
+    <h1>글 삭제</h1>
+    <p>"{{ post.title }}" 글을 정말 삭제하시겠습니까? 삭제하면 되돌릴 수 없습니다.</p>
+    <form method="post" class="post-form">
+        {% csrf_token %}
+        <div class="post-form-actions">
+            <button type="submit" class="btn btn-primary">삭제</button>
+            <a href="{% url 'boards:post_detail' board.slug post.pk %}" class="btn btn-ghost">취소</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

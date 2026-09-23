@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<article class="post-detail">
+    <header class="post-detail-header">
+        <p class="post-detail-board"><a href="{% url 'boards:post_list' board.slug %}">{{ board.name }}</a></p>
+        <h1 class="post-detail-title">{{ post.title }}</h1>
+        <div class="post-detail-meta">
+            <span class="author-badge">
+                {{ post.author.nickname }}
+                <span class="rank-chip">{{ post.author.rank_name }}</span>
+                {% if post.author.duel_record %}<span class="record-chip">{{ post.author.duel_record }}</span>{% endif %}
+            </span>
+            <span>{{ post.created_at|date:"Y.m.d H:i" }}</span>
+            <span>조회 {{ post.view_count }}</span>
+            <span>댓글 {{ comment_count }}</span>
+            <span>추천 {{ like_count }}</span>
+        </div>
+    </header>
+
+    {% if post.images.all %}
+    <div class="post-detail-images">
+        {% for image in post.images.all %}
+        <img src="{{ image.image.url }}" alt="{{ post.title }} 첨부 이미지" loading="lazy">
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% comment %}
+    content는 boards/forms.py에서 bleach로 위험한 태그를 걸러낸 뒤 저장한 HTML이라
+    그대로 렌더링합니다(|safe). linebreaks를 쓰면 에디터가 만든 <p> 태그와 겹쳐서
+    줄바꿈이 이상해집니다.
+    {% endcomment %}
+    <div class="post-detail-content">{{ post.content|safe }}</div>
+
+    <div class="post-detail-like">
+        <form action="{% url 'boards:like_toggle' board.slug post.pk %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="like-btn {% if user_has_liked %}is-liked{% endif %}" {% if not request.user.is_authenticated %}disabled title="로그인 후 추천할 수 있습니다"{% endif %}>
+                <span aria-hidden="true">🔥</span> 추천(화력) {{ like_count }}
+            </button>
+        </form>
+    </div>
+
+    <div class="post-detail-actions">
+        <a href="{% url 'boards:post_list' board.slug %}" class="btn btn-ghost">목록</a>
+        {% if can_edit %}
+        <a href="{% url 'boards:post_edit' board.slug post.pk %}" class="btn btn-ghost">수정</a>
+        <a href="{% url 'boards:post_delete' board.slug post.pk %}" class="btn btn-ghost">삭제</a>
+        {% endif %}
+    </div>
+
+    <section class="post-comments" aria-labelledby="comments-heading">
+        <h2 id="comments-heading" class="post-comments-heading">댓글 {{ comment_count }}</h2>
+
+        {% if request.user.is_authenticated %}
+        <form action="{% url 'boards:comment_add' board.slug post.pk %}" method="post" class="comment-form">
+            {% csrf_token %}
+            {{ comment_form.content }}
+            <button type="submit" class="btn btn-primary">댓글 등록</button>
+        </form>
+        {% else %}
+        <p class="comment-login-notice"><a href="{% url 'login' %}">로그인</a> 후 댓글을 남길 수 있습니다.</p>
+        {% endif %}
+
+        {% if comments %}
+        <ul class="comment-list">
+            {% for comment in comments %}
+            <li class="comment-item">
+                <div class="comment-item-head">
+                    <span class="author-badge">
+                        {{ comment.author.nickname }}
+                        <span class="rank-chip">{{ comment.author.rank_name }}</span>
+                    </span>
+                    <span class="comment-item-date">{{ comment.created_at|date:"Y.m.d H:i" }}</span>
+                </div>
+                <p class="comment-item-content">{{ comment.content }}</p>
+                {% if request.user.is_authenticated and comment.author_id == request.user.id or request.user.is_staff %}
+                <form action="{% url 'boards:comment_delete' board.slug post.pk comment.pk %}" method="post" class="comment-item-delete">
+                    {% csrf_token %}
+                    <button type="submit" class="link-btn">삭제</button>
+                </form>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="comment-empty">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
+        {% endif %}
+    </section>
+</article>
+{% endblock %}

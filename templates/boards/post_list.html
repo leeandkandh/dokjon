@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<div class="board-header">
+    <h1 class="board-title">{{ board.name }}</h1>
+    {% if request.user.is_authenticated %}
+    <a href="{% url 'boards:post_create' board.slug %}" class="btn btn-primary">글쓰기</a>
+    {% endif %}
+</div>
+
+{% if page_obj.object_list %}
+<ul class="post-card-list">
+    <li class="sr-only post-card-list-caption">{{ board.name }} 게시판 글 목록</li>
+    {% for post in page_obj %}
+    <li class="post-card">
+        <a href="{% url 'boards:post_detail' board.slug post.pk %}" class="post-card-link">
+            {% if post.thumbnail_url %}
+            <img src="{{ post.thumbnail_url }}" alt="" class="post-card-thumb" loading="lazy">
+            {% endif %}
+            <div class="post-card-body">
+                <h2 class="post-card-title">{{ post.title }}</h2>
+                <div class="post-card-meta">
+                    <span class="author-badge">
+                        {{ post.author.nickname }}
+                        <span class="rank-chip">{{ post.author.rank_name }}</span>
+                        {% if post.author.duel_record %}<span class="record-chip">{{ post.author.duel_record }}</span>{% endif %}
+                    </span>
+                    <span class="post-card-date">{{ post.created_at|date:"Y.m.d" }}</span>
+                </div>
+                <div class="post-card-stats">
+                    <span class="post-card-stat post-card-stat-comment" aria-label="댓글 {{ post.comment_count }}개">
+                        <span aria-hidden="true">💬</span>{{ post.comment_count }}
+                    </span>
+                    <span class="post-card-stat post-card-stat-like" aria-label="추천 {{ post.like_count }}개">
+                        <span aria-hidden="true">🔥</span>{{ post.like_count }}
+                    </span>
+                    <span class="post-card-stat post-card-stat-view" aria-label="조회 {{ post.view_count }}회">
+                        <span aria-hidden="true">👁</span>{{ post.view_count }}
+                    </span>
+                </div>
+            </div>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pagination" aria-label="페이지 이동">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="page-link">이전</a>
+    {% endif %}
+    <span class="page-current">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="page-link">다음</a>
+    {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<p class="board-empty">아직 게시글이 없습니다. {% if request.user.is_authenticated %}첫 글을 남겨보세요!{% else %}로그인 후 첫 글을 남겨보세요!{% endif %}</p>
+{% endif %}
+{% endblock %}

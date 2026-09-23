@@ -1,0 +1,9 @@
+Django>=5.2,<5.3
+psycopg[binary]>=3.1
+python-dotenv>=1.0
+Pillow>=10.0
+bleach>=6.0
+
+# 14단계(AWS 배포)에서 추가
+gunicorn>=23.0        # 운영 서버에서 Django를 실행하는 WSGI 서버 (nginx가 앞단에서 리버스 프록시)
+whitenoise>=6.7        # STATIC_ROOT(collectstatic 결과물)를 gunicorn이 직접 서빙

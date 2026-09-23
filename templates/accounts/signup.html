@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}회원가입 - 독존{% endblock %}
+{% block meta_description %}독존 회원가입 페이지입니다.{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+<section class="auth-card">
+    <h1>회원가입</h1>
+    <form method="post" novalidate id="signup-form"
+          data-check-username-url="{% url 'accounts:check_username' %}"
+          data-check-nickname-url="{% url 'accounts:check_nickname' %}"
+          data-check-email-url="{% url 'accounts:check_email' %}">
+        {% csrf_token %}
+
+        <div class="form-field">
+            <label for="{{ form.username.id_for_label }}">아이디</label>
+            {{ form.username }}
+            <p class="form-error" id="username-check-result" hidden></p>
+            {% if form.username.help_text %}<div class="form-help">{{ form.username.help_text }}</div>{% endif %}
+            {% for error in form.username.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.nickname.id_for_label }}">닉네임</label>
+            {{ form.nickname }}
+            <p class="form-error" id="nickname-check-result" hidden></p>
+            {% if form.nickname.help_text %}<div class="form-help">{{ form.nickname.help_text }}</div>{% endif %}
+            {% for error in form.nickname.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.email.id_for_label }}">이메일</label>
+            {{ form.email }}
+            <p class="form-error" id="email-check-result" hidden></p>
+            {% for error in form.email.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.birth_date.id_for_label }}">생년월일</label>
+            <div class="birth-date-selects">{{ form.birth_date }}</div>
+            {% for error in form.birth_date.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.party.id_for_label }}">진영</label>
+            {{ form.party }}
+            {% for error in form.party.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.password1.id_for_label }}">비밀번호</label>
+            {{ form.password1 }}
+            {% if form.password1.help_text %}<div class="form-help">{{ form.password1.help_text }}</div>{% endif %}
+            {% for error in form.password1.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.password2.id_for_label }}">비밀번호 확인</label>
+            {{ form.password2 }}
+            {% for error in form.password2.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="form-field terms-field">
+            {% comment %}
+            실제 이용약관/개인정보처리방침 문구는 아직 확정되지 않았습니다 (요구사항 12장 3번).
+            아래는 임시 텍스트이며, 서비스 오픈 전 정식 약관으로 반드시 교체해야 합니다.
+            {% endcomment %}
+            <label class="form-field-title">약관 동의</label>
+            <div class="terms-box" tabindex="0">
+                <p><strong>[임시] 독존 서비스 이용약관 및 개인정보 수집·이용 동의 (초안)</strong></p>
+                <p>본 약관은 독존(이하 "회사")이 제공하는 서비스 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항을 정합니다. (실제 서비스 오픈 전 정식 약관으로 교체 예정)</p>
+                <p>1. 회원은 본 약관에 동의함으로써 서비스 이용 자격을 얻습니다.</p>
+                <p>2. 회사가 수집하는 개인정보 항목: 아이디, 닉네임, 이메일, 생년월일, 진영(보수/진보) 정보</p>
+                <p>3. 수집한 개인정보는 서비스 제공 및 회원 관리 목적 외에는 사용하지 않습니다.</p>
+                <p>4. 회원은 마이페이지 또는 회원 탈퇴를 통해 언제든지 개인정보 삭제를 요청할 수 있습니다.</p>
+                <p>5. 회사는 관련 법령이 정하는 바에 따라 회원의 개인정보를 안전하게 관리합니다.</p>
+                <p>(이하 생략 — 정식 약관/개인정보처리방침 작성 전까지의 임시 문구입니다)</p>
+            </div>
+            <label class="checkbox-label" for="{{ form.agree_terms.id_for_label }}">
+                {{ form.agree_terms }}
+                <span>{{ form.agree_terms.label }}</span>
+            </label>
+            {% for error in form.agree_terms.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            <p class="form-error" id="terms-js-error" hidden>약관에 동의해야 회원가입을 진행할 수 있습니다.</p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">가입하기</button>
+    </form>
+    <p class="auth-links">
+        이미 계정이 있으신가요? <a href="{% url 'login' %}">로그인</a>
+    </p>
+</section>
+</div>
+{% endblock %}

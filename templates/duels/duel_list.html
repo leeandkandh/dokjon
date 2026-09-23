@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<div class="board-header">
+    <h1 class="board-title">⚡ 일기토 (1:1 끝장토론)</h1>
+</div>
+
+{% if current_duel %}
+<section class="duel-widget duel-widget-live" aria-labelledby="current-duel-heading">
+    <p class="duel-widget-badge">
+        <span class="duel-widget-badge-dot" aria-hidden="true"></span>LIVE 1:1 일기토 챔피언십
+    </p>
+    <h2 id="current-duel-heading" class="duel-widget-topic">
+        <a href="{% url 'duels:duel_detail' current_duel.pk %}">{{ current_duel.topic }}</a>
+    </h2>
+
+    <div class="duel-widget-sides">
+        <div class="duel-side duel-side-challenger">
+            <span class="duel-side-name">{{ current_duel.challenger.nickname }}</span>
+            <span class="rank-chip">{{ current_duel.challenger.rank_name }}</span>
+            <span class="duel-side-percent">{{ current_duel.challenger_percent }}%</span>
+        </div>
+        <span class="duel-widget-vs">VS</span>
+        <div class="duel-side duel-side-opponent">
+            <span class="duel-side-percent">{{ current_duel.opponent_percent }}%</span>
+            <span class="rank-chip">{{ current_duel.opponent.rank_name }}</span>
+            <span class="duel-side-name">{{ current_duel.opponent.nickname }}</span>
+        </div>
+    </div>
+
+    <div class="duel-widget-bar">
+        <div class="duel-widget-bar-fill duel-widget-bar-fill-challenger" style="width: {{ current_duel.challenger_percent }}%;"></div>
+        <div class="duel-widget-bar-fill duel-widget-bar-fill-opponent" style="width: {{ current_duel.opponent_percent }}%;"></div>
+    </div>
+
+    <p class="duel-widget-countdown" data-duel-countdown="{{ current_duel.seconds_remaining }}">
+        투표 마감까지 <strong>{{ current_duel.seconds_remaining }}초</strong>
+    </p>
+
+    <a href="{% url 'duels:duel_detail' current_duel.pk %}" class="btn btn-primary duel-widget-vote-btn">투표하러 가기</a>
+</section>
+{% else %}
+<p class="board-empty">현재 진행 중인 일기토가 없습니다. 관리자가 새 대진을 등록하면 이곳에 표시됩니다.</p>
+{% endif %}
+
+{% if page_obj.object_list %}
+<table class="post-table duel-history-table">
+    <caption class="sr-only">지난 일기토 대진 목록</caption>
+    <thead>
+        <tr>
+            <th scope="col">주제</th>
+            <th scope="col">대진</th>
+            <th scope="col">상태</th>
+            <th scope="col">결과</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for duel in page_obj %}
+        <tr>
+            <td><a href="{% url 'duels:duel_detail' duel.pk %}">{{ duel.topic }}</a></td>
+            <td>{{ duel.challenger.nickname }} vs {{ duel.opponent.nickname }}</td>
+            <td>{{ duel.get_status_display }}</td>
+            <td>
+                {% if duel.status == 'finished' %}
+                    {% if duel.winner %}{{ duel.winner.nickname }} 승{% else %}무승부{% endif %}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pagination" aria-label="페이지 이동">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="page-link">이전</a>
+    {% endif %}
+    <span class="page-current">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="page-link">다음</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endif %}
+{% endblock %}

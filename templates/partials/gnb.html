@@ -1,0 +1,35 @@
+{% comment %}
+GNB(주 메뉴): DB(Menu 모델) 기반으로 동적으로 표시합니다.
+"종합 홈"만 게시판이 아니라 메인 페이지로 가는 고정 링크라서 템플릿에 직접 써뒀습니다.
+하위 메뉴(children)가 없는 메뉴는 그 자체가 게시판이라 실제 글 목록(boards:post_list)으로
+링크합니다. 하위 메뉴가 있는 메뉴는 마우스를 올리면(hover)/포커스 시 드롭다운이 나타납니다
+(2026-09-23 기준으로는 모든 게시판이 하위 메뉴 없이 한 줄로 나란히 있습니다).
+현재 보고 있는 페이지의 메뉴는 "is-active" 클래스로 강조 표시합니다.
+{% endcomment %}
+<ul id="gnb-list" class="gnb-list">
+    <li class="gnb-item">
+        <a href="{% url 'core:home' %}" class="gnb-link gnb-home{% if request.resolver_match.view_name == 'core:home' %} is-active{% endif %}">종합 홈</a>
+    </li>
+    {% for item in gnb_items %}
+    <li class="gnb-item{% if item.children.all %} has-children{% endif %}">
+        {% if item.children.all %}
+        <a href="#" class="gnb-link gnb-{{ item.slug }}" aria-haspopup="true">{{ item.name }}</a>
+        <ul class="gnb-dropdown">
+            {% for child in item.children.all %}
+            <li><a href="{% url 'boards:post_list' child.slug %}" class="gnb-dropdown-link">{{ child.name }}</a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        {% if item.slug == 'ilgito' %}
+        <a href="{% url 'duels:duel_list' %}" class="gnb-link gnb-{{ item.slug }} gnb-live{% if request.resolver_match.app_name == 'duels' %} is-active{% endif %}">
+            <span aria-hidden="true">⚡</span> {{ item.name }}
+        </a>
+        {% else %}
+        <a href="{% url 'boards:post_list' item.slug %}" class="gnb-link gnb-{{ item.slug }}{% if board.slug == item.slug %} is-active{% endif %}">
+            {{ item.name }}
+        </a>
+        {% endif %}
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>

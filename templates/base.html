@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}독존 - 정치 토론 커뮤니티{% endblock %}</title>
+<meta name="description" content="{% block meta_description %}독존은 보수와 민주 진영이 자유롭게 정치 토론을 나누는 정치 커뮤니티입니다.{% endblock %}">
+<link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+
+{% block og_tags %}
+<meta property="og:site_name" content="독존">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{% block og_title %}독존 - 정치 토론 커뮤니티{% endblock %}">
+<meta property="og:description" content="{% block og_description %}독존은 보수와 민주 진영이 자유롭게 정치 토론을 나누는 정치 커뮤니티입니다.{% endblock %}">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% endblock %}
+
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<a class="skip-link" href="#main-content">본문 바로가기</a>
+
+<div class="site-header">
+    <header class="site-top">
+        {% include "partials/top.html" %}
+    </header>
+    <nav class="site-gnb" aria-label="주 메뉴">
+        {% include "partials/gnb.html" %}
+    </nav>
+</div>
+
+<div class="layout">
+    {% block lnb %}{% endblock %}
+
+    <main id="main-content" class="site-main">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="message message-{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<footer class="site-footer">
+    {% include "partials/footer.html" %}
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

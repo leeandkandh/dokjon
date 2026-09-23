@@ -10,22 +10,80 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# .env 파일(비밀번호 등 민감정보)을 읽어와서 환경변수로 등록합니다.
+# .env는 Git에 올라가지 않으므로(.gitignore 참고), 이 파일에는 실제 비밀 값이 없습니다.
+load_dotenv(BASE_DIR / '.env')
+
+
+# 14단계(AWS 배포) 준비: 운영 서버에서는 .env(서버에만 있고 Git에는 안 올라감)에
+# SECRET_KEY/DEBUG/ALLOWED_HOSTS/CSRF_TRUSTED_ORIGINS를 채워서 아래 기본값을 덮어씁니다.
+# 로컬 개발 PC에서는 .env에 이 값들을 안 넣어도 아래 기본값(DEBUG=True 등)으로 그대로 돌아갑니다.
+
+
+def _env_bool(name, default):
+    """'true'/'1'/'yes' 같은 문자열 환경변수를 파이썬 bool로 바꿔줍니다."""
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def _env_list(name, default):
+    """쉼표로 구분한 문자열 환경변수를 리스트로 바꿔줍니다. (예: "dokjon.com,www.dokjon.com")"""
+    value = os.environ.get(name)
+    if not value:
+        return default
+    return [item.strip() for item in value.split(',') if item.strip()]
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=%*ptf+ygj90l+_k&9v$jx$^t(4gi=+t^(^h_(h!-*$cb0&8s)'
+# 운영 서버는 반드시 .env의 SECRET_KEY로 이 기본값을 덮어써야 합니다
+# (아래 기본값은 처음 startproject 때 자동 생성된 것으로, 이미 이 저장소 히스토리에 있어 더는 비밀이 아닙니다).
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-=%*ptf+ygj90l+_k&9v$jx$^t(4gi=+t^(^h_(h!-*$cb0&8s)',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# .env에 DEBUG=False를 넣지 않으면(=로컬 개발 중이면) 기본값 True로 동작합니다.
+DEBUG = _env_bool('DEBUG', True)
 
-ALLOWED_HOSTS = []
+# .env의 ALLOWED_HOSTS(쉼표 구분)로 채웁니다. 운영 서버 .env 예시:
+# ALLOWED_HOSTS=dokjon.com,www.dokjon.com,<EC2 퍼블릭 IP>
+ALLOWED_HOSTS = _env_list('ALLOWED_HOSTS', ['localhost', '127.0.0.1'])
+
+# 127.0.0.1과 localhost를 섞어서 접속하면 CSRF 오류가 날 수 있어서 둘 다 신뢰 origin으로 등록.
+# 운영 서버 .env 예시: CSRF_TRUSTED_ORIGINS=https://dokjon.com,https://www.dokjon.com
+CSRF_TRUSTED_ORIGINS = _env_list('CSRF_TRUSTED_ORIGINS', [
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+])
+
+# nginx가 앞단에서 SSL(https)을 처리하고 gunicorn에는 http로 전달하는 구조라,
+# 이 헤더가 있어야 Django가 "지금 요청이 사실은 https였다"는 걸 알 수 있습니다
+# (SECURE_SSL_REDIRECT/CSRF 판단에 필요). nginx 설정에서 X-Forwarded-Proto를 꼭 보내야 합니다.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# DEBUG=False(운영)일 때만 켜는 보안 옵션들. 로컬 개발(http, DEBUG=True)에는 영향 없습니다.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = _env_bool('SECURE_SSL_REDIRECT', True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30  # 30일. 처음 배포 직후엔 짧게 시작해도 됩니다.
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    X_FRAME_OPTIONS = 'DENY'
 
 
 # Application definition
@@ -37,10 +95,20 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 독존 자체 앱
+    'core',      # 공통 레이아웃/메인 페이지
+    'accounts',  # 회원가입/로그인/회원 모델 (4단계에서 추가)
+    'menus',     # 관리자 메뉴 관리 - GNB/LNB (5단계에서 추가)
+    'boards',    # 게시판 CRUD (6단계에서 추가)
+    'duels',     # 1:1 일기토(끝장토론) 대진/투표 (9단계에서 추가)
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # 14단계(AWS 배포): whitenoise가 STATIC_ROOT(collectstatic 결과물)를 gunicorn만으로도
+    # 바로 서빙할 수 있게 해줍니다. nginx가 /static/을 직접 서빙하도록 설정해도 되지만,
+    # nginx 설정을 깜빡했을 때의 대비책 + 로컬 개발 편의를 위해 항상 켜둡니다.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -54,13 +122,16 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # 프로젝트 공통 템플릿 폴더 (TOP/GNB/LNB/FOOTER 등 공통 레이아웃을 여기 둠)
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # 5단계: GNB(주 메뉴)를 모든 템플릿에서 gnb_items로 바로 쓸 수 있게 함
+                'menus.context_processors.menu_context',
             ],
         },
     },
@@ -71,13 +142,28 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# 4단계부터 PostgreSQL을 사용합니다. 접속 정보는 .env 파일에서 읽어옵니다.
+# (.env가 없거나 값이 비어있으면 아래 기본값을 사용합니다)
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'dokjon_db'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
+
+
+# 커스텀 회원(User) 모델
+# 반드시 첫 migrate 이전에 설정해야 합니다 (나중에 바꾸는 건 매우 번거롭습니다).
+AUTH_USER_MODEL = 'accounts.User'
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'core:home'
+LOGOUT_REDIRECT_URL = 'core:home'
 
 
 # Password validation
@@ -89,6 +175,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -101,10 +188,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
+# 독존은 한국어 서비스이므로 언어/시간대를 한국 기준으로 변경합니다.
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ko-kr'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
@@ -115,6 +203,29 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# 개발 중 직접 작성하는 CSS/JS가 들어갈 폴더 (프로젝트 루트의 static/)
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# 운영 서버에서 `python manage.py collectstatic` 실행 시 정적파일이 모이는 폴더.
+# .gitignore에 이미 제외되어 있고, 서버에서 배포할 때마다 새로 생성합니다.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# whitenoise: 파일명에 해시를 붙여 캐시하고(CompressedManifestStaticFilesStorage), gzip 압축도 해줍니다.
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
+
+# 회원이 업로드하는 파일(게시글 첨부 이미지 등)이 저장되는 경로 (7단계)
+# 개발 중에는 프로젝트 폴더 안 media/에 저장하고, 14단계(AWS 배포) 때
+# S3 같은 저장소로 옮기는 걸 검토할 예정입니다.
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
