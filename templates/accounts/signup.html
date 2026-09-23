@@ -49,6 +49,16 @@
         </div>
 
         <div class="form-field">
+            <span class="form-field-title">성별</span>
+            <div class="gender-choices">
+                {% for radio in form.gender %}
+                <label class="checkbox-label">{{ radio.tag }} <span>{{ radio.choice_label }}</span></label>
+                {% endfor %}
+            </div>
+            {% for error in form.gender.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="form-field">
             <label for="{{ form.password1.id_for_label }}">비밀번호</label>
             {{ form.password1 }}
             {% if form.password1.help_text %}<div class="form-help">{{ form.password1.help_text }}</div>{% endif %}

@@ -3,7 +3,7 @@ import datetime
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
-from .models import User, PARTY_CHOICES
+from .models import User, GENDER_CHOICES, PARTY_CHOICES
 from .validators import contains_banned_word
 
 _CURRENT_YEAR = datetime.date.today().year
@@ -19,6 +19,8 @@ class SignUpForm(UserCreationForm):
         ),
     )
     party = forms.ChoiceField(label='진영', choices=PARTY_CHOICES)
+    # 2026-09-23 추가: 성별 선택 (남성/여성)
+    gender = forms.ChoiceField(label='성별', choices=GENDER_CHOICES, widget=forms.RadioSelect)
     agree_terms = forms.BooleanField(
         label='위 이용약관 및 개인정보 수집·이용에 동의합니다.',
         required=True,
@@ -27,7 +29,7 @@ class SignUpForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ['username', 'nickname', 'email', 'birth_date', 'party']
+        fields = ['username', 'nickname', 'email', 'birth_date', 'party', 'gender']
         labels = {
             'username': '아이디',
             'nickname': '닉네임',

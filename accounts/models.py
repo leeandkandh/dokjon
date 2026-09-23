@@ -13,6 +13,12 @@ PARTY_CHOICES = [
     ('democrat', '진보'),
 ]
 
+# 2026-09-23 요청: 회원가입 시 성별 선택 추가
+GENDER_CHOICES = [
+    ('male', '남성'),
+    ('female', '여성'),
+]
+
 # 9단계(요구사항 19장 "회원등급 산정기준") 포인트 등급표.
 # (필요 포인트, 등급명) 튜플을 포인트가 낮은 순서로 나열합니다.
 # 정치 배틀 아레나 컨셉에 맞춰 "예비당원"에서 "대통령"까지 9단계로 구성했습니다.
@@ -52,9 +58,10 @@ class User(AbstractUser):
         '닉네임',
         max_length=15,
         unique=True,
-        validators=[MinLengthValidator(4, message='닉네임은 4자 이상이어야 합니다.')],
+        # 2026-09-23 변경: 4자 이상 -> 2자 이상
+        validators=[MinLengthValidator(2, message='닉네임은 2자 이상이어야 합니다.')],
         error_messages={'unique': '이미 사용 중인 닉네임입니다.'},
-        help_text='한글/영문/숫자 4~15자',
+        help_text='한글/영문/숫자 2~15자',
     )
     # null=True, blank=True: createsuperuser로 관리자 계정을 만들 때는
     # 생년월일을 입력받지 않으므로(REQUIRED_FIELDS에 없음), 값이 없어도
@@ -62,6 +69,9 @@ class User(AbstractUser):
     # 일반 회원가입(SignUpForm)에서는 필수 입력이므로 실제로는 항상 값이 들어갑니다.
     birth_date = models.DateField('생년월일', null=True, blank=True)
     party = models.CharField('진영', max_length=20, choices=PARTY_CHOICES, blank=True)
+    # 2026-09-23 추가: 성별. party와 마찬가지로 DB에는 blank=True(관리자 계정 등 예외 허용)이고,
+    # 일반 회원가입 폼(SignUpForm)에서는 필수 선택입니다.
+    gender = models.CharField('성별', max_length=10, choices=GENDER_CHOICES, blank=True)
 
     # 요구사항 13장(관리자)에서 쓸 상태: 정지회원 여부
     is_suspended = models.BooleanField('정지회원 여부', default=False)
