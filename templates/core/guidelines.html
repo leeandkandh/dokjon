@@ -74,7 +74,7 @@
 
     <section id="g-ranks">
         <h2>4. 등급</h2>
-        <p>포인트가 쌓이면 등급이 오릅니다. 최고 등급 <strong>독존</strong>에 오르면 메인 화면 <strong>"독존 등극"</strong>에 이름이 올라갑니다.</p>
+        <p>포인트가 쌓이면 등급이 오릅니다. 최고 등급 <strong>독존</strong>에 오르면 메인 화면 <strong>"독존 등극"</strong>에 이름이 올라갑니다. 등급별 회원 수와 내 진행률은 <a href="{% url 'core:ranks' %}">회원 등급</a> 페이지에서 볼 수 있습니다.</p>
         <ol class="rank-ladder">
             {% for threshold, name in rank_tiers %}
             <li class="rank-ladder-step{% if forloop.last %} rank-ladder-top{% endif %}"><span class="rank-chip">{{ name }}</span><span class="rank-ladder-pt">{{ threshold }}P~</span></li>

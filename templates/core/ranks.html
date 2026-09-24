@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+{# 2026-09-24: 상단 "회원등급" 링크. 등급표는 accounts/models.py RANK_TIERS에서 자동으로 만들어집니다 #}
+<article class="policy-page ranks-page">
+    <header class="policy-header">
+        <p class="policy-kicker">독존 DOKJON</p>
+        <h1>회원 등급</h1>
+        <p class="policy-meta">초심자에서 독존까지, 총 {{ tier_count }}단계 · 전체 회원 {{ total_members }}명</p>
+    </header>
+
+    {% if request.user.is_authenticated %}
+    <section class="rank-me" aria-label="내 등급">
+        <div class="rank-me-head">
+            <span class="rank-me-label">내 등급</span>
+            <span class="rank-me-name">{{ request.user.rank_name }}</span>
+            <span class="rank-me-points">{{ request.user.points }}P</span>
+        </div>
+        {% if progress %}
+        <div class="rank-me-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress.percent }}" aria-label="다음 등급까지 진행률">
+            <div class="rank-me-bar-fill" style="width: {{ progress.percent }}%;"></div>
+        </div>
+        <p class="rank-me-next">다음 등급 <strong>{{ progress.next_name }}</strong>까지 <strong>{{ progress.remaining }}P</strong> 남았습니다 ({{ progress.percent }}%)</p>
+        {% else %}
+        <p class="rank-me-next rank-me-max">👑 최고 등급 <strong>독존</strong>에 올랐습니다. 메인 화면 "독존 등극"에 이름이 걸려 있습니다.</p>
+        {% endif %}
+    </section>
+    {% else %}
+    <p class="policy-lead"><a href="{% url 'login' %}">로그인</a>하면 내 등급과 다음 등급까지 남은 포인트를 볼 수 있습니다.</p>
+    {% endif %}
+
+    <section aria-labelledby="rank-table-heading">
+        <h2 id="rank-table-heading">전체 등급표</h2>
+        <ol class="rank-tower">
+            {% for tier in tiers %}
+            <li class="rank-tier{% if tier.is_top %} rank-tier-top{% endif %}{% if tier.is_current %} is-current{% elif tier.is_reached %} is-reached{% endif %}">
+                <span class="rank-tier-level">{{ tier.level }}</span>
+                <span class="rank-tier-main">
+                    <span class="rank-tier-name">{% if tier.is_top %}👑 {% endif %}{{ tier.name }}{% if tier.is_current %}<span class="rank-tier-you">내 등급</span>{% endif %}</span>
+                    <span class="rank-tier-range">{% if tier.next_threshold %}{{ tier.threshold }}P ~ {{ tier.next_threshold|add:"-1" }}P{% else %}{{ tier.threshold }}P 이상{% endif %}</span>
+                </span>
+                <span class="rank-tier-count">{{ tier.member_count }}명</span>
+            </li>
+            {% endfor %}
+        </ol>
+    </section>
+
+    <section aria-labelledby="rank-howto-heading">
+        <h2 id="rank-howto-heading">포인트 쌓는 법</h2>
+        <div class="policy-table-wrap">
+        <table class="policy-table policy-table-compact">
+            <thead><tr><th scope="col">활동</th><th scope="col">포인트</th></tr></thead>
+            <tbody>
+                <tr><td>글쓰기 (모든 게시판)</td><td class="pt-plus">+{{ points_post_write }}</td></tr>
+                <tr><td>댓글 쓰기</td><td class="pt-plus">+{{ points_comment_write }}</td></tr>
+                <tr><td>내 글이 화력(추천)을 받을 때</td><td class="pt-plus">+{{ points_like_received }}</td></tr>
+                <tr><td>1:1 일기토 승리</td><td class="pt-plus">+{{ points_duel_win }}</td></tr>
+                <tr><td>1:1 일기토 패배 (참가 보상)</td><td class="pt-plus">+{{ points_duel_loss }}</td></tr>
+                <tr><td>내 글 삭제</td><td class="pt-minus">−{{ points_post_delete }}</td></tr>
+            </tbody>
+        </table>
+        </div>
+        <p class="policy-note">포인트와 등급은 커뮤니티 활동 표시일 뿐 현금·상품으로 바꿀 수 없습니다. 자세한 규칙은 <a href="{% url 'core:guidelines' %}#g-points">커뮤니티 가이드라인</a>을 참고하세요.</p>
+    </section>
+</article>
+{% endblock %}

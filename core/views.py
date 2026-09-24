@@ -227,3 +227,54 @@ def contact(request):
 def contact_done(request):
     context = _policy_context('문의 접수 완료', '독존 문의 접수 완료')
     return render(request, 'core/contact_done.html', context)
+
+
+def ranks(request):
+    """회원 등급 안내 (2026-09-24). 상단 "회원등급" 링크로 들어옵니다.
+
+    전체 10단계 등급표(기준 포인트, 등급별 회원 수)와, 로그인한 회원이면
+    내 현재 등급과 다음 등급까지의 진행률을 보여줍니다.
+    등급표는 accounts/models.py의 RANK_TIERS를 그대로 읽으므로 기준을 바꾸면 자동 반영됩니다.
+    """
+    members = User.objects.filter(is_active=True)
+    user = request.user if request.user.is_authenticated else None
+
+    tiers = []
+    for index, (threshold, name) in enumerate(RANK_TIERS):
+        next_threshold = RANK_TIERS[index + 1][0] if index + 1 < len(RANK_TIERS) else None
+        in_tier = members.filter(points__gte=threshold)
+        if next_threshold is not None:
+            in_tier = in_tier.filter(points__lt=next_threshold)
+        tiers.append({
+            'level': index + 1,
+            'name': name,
+            'threshold': threshold,
+            'next_threshold': next_threshold,
+            'member_count': in_tier.count(),
+            'is_current': user is not None and user.rank_name == name,
+            'is_reached': user is not None and user.points >= threshold,
+            'is_top': next_threshold is None,
+        })
+
+    progress = None
+    if user is not None:
+        nxt = user.next_rank
+        if nxt:
+            next_name, next_threshold, remaining = nxt
+            current_threshold = max(t for t, _ in RANK_TIERS if t <= user.points)
+            span = next_threshold - current_threshold
+            progress = {
+                'next_name': next_name,
+                'remaining': remaining,
+                'percent': round((user.points - current_threshold) / span * 100) if span else 100,
+            }
+
+    context = _policy_context('회원 등급', '독존 회원 등급표 - 초심자부터 독존까지 10단계 등급과 포인트 기준.')
+    context.update(_points_context())
+    context.update({
+        'tiers': list(reversed(tiers)),  # 화면에는 최고 등급(독존)이 맨 위
+        'tier_count': len(tiers),
+        'progress': progress,
+        'total_members': members.count(),
+    })
+    return render(request, 'core/ranks.html', context)
