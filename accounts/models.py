@@ -104,6 +104,28 @@ class User(AbstractUser):
         return name
 
     @property
+    def age_group(self):
+        """나이대 문자열 (2026-09-24). 올해 연도 - 출생 연도로 계산해서 10살 단위로 자릅니다.
+        예) 2026년 기준 1989년생 → 37 → '30대'. 생년월일이 없으면(관리자 등) None."""
+        if not self.birth_date:
+            return None
+        from django.utils import timezone  # 모듈 맨 위 import를 늘리지 않으려고 여기서 import
+        age = timezone.localdate().year - self.birth_date.year
+        if age < 10:
+            return None
+        return f'{age // 10 * 10}대'
+
+    @property
+    def gender_short(self):
+        """성별 한 글자 ('남'/'여'). 선택 안 했으면 None."""
+        return {'male': '남', 'female': '여'}.get(self.gender)
+
+    @property
+    def is_top_rank(self):
+        """최고 등급(독존) 여부."""
+        return self.points >= RANK_TIERS[-1][0]
+
+    @property
     def next_rank(self):
         """다음 등급 (등급명, 필요 포인트, 남은 포인트). 이미 최고 등급이면 None."""
         for threshold, tier_name in RANK_TIERS:

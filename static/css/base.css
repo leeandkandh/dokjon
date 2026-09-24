@@ -1653,3 +1653,256 @@ a { color: inherit; }
     .duel-board-vs { font-size: 0.75rem; }
     .duel-vote-btn { padding: 0 10px; font-size: 0.78rem; }
 }
+
+/* ---------------- 성별·나이대 칩 (보수/민주 아레나 글쓴이, 2026-09-24) ---------------- */
+.demo-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elevated);
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.demo-chip-gender { font-weight: 800; }
+.demo-chip-male { color: #60a5fa; }
+.demo-chip-female { color: #f472b6; }
+.demo-chip-sep { opacity: 0.6; }
+
+/* ---------------- 게시판 목록 맨 위 "화력 BEST 10" (2026-09-24) ---------------- */
+.hot-board {
+    position: relative;
+    margin-bottom: var(--space-4);
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    border: 1px solid rgba(249, 115, 22, 0.55);
+    background:
+        radial-gradient(120% 90% at 0% 0%, rgba(239, 35, 60, 0.18), transparent 60%),
+        radial-gradient(90% 80% at 100% 0%, rgba(234, 179, 8, 0.14), transparent 60%),
+        var(--color-bg-card);
+    box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.12), 0 10px 30px -18px rgba(239, 35, 60, 0.7);
+}
+.hot-board-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 var(--space-2);
+    font-size: 1.05rem;
+    font-weight: 800;
+    background: linear-gradient(90deg, #ff6b3d, var(--color-gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.hot-board-flame { -webkit-text-fill-color: initial; color: initial; }
+.hot-list { list-style: none; margin: 0; padding: 0; }
+.hot-item + .hot-item { border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.hot-item-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 10px 4px;
+    min-height: 48px;
+    color: var(--color-text);
+    text-decoration: none;
+}
+.hot-item-link:hover .hot-item-title { text-decoration: underline; }
+.hot-rank {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: var(--color-bg-elevated);
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+/* 1~3위는 금/은/동 */
+.hot-rank-1 { background: linear-gradient(135deg, #fde047, #eab308); color: #1a1300; }
+.hot-rank-2 { background: linear-gradient(135deg, #e5e7eb, #9ca3af); color: #111; }
+.hot-rank-3 { background: linear-gradient(135deg, #fdba74, #c2410c); color: #1a0a00; }
+.hot-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.hot-item-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.hot-item-top .hot-item-title { font-weight: 800; }
+.hot-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.74rem;
+    color: var(--color-text-muted);
+}
+.hot-item-author { color: var(--color-text); font-weight: 600; }
+.hot-item-fire {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(239, 35, 60, 0.16);
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+.hot-item-top .hot-item-fire { background: linear-gradient(90deg, #ef233c, #f97316); color: #fff; }
+.board-section-title {
+    margin: 0 0 var(--space-2);
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+/* ---------------- 메인: 보수/민주 최신글 (2026-09-24) ---------------- */
+.arena-post-list { list-style: none; margin: 0; padding: 0; }
+.arena-post-list li + li { border-top: 1px solid var(--color-border); }
+.arena-post-link {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 0;
+    color: var(--color-text);
+    text-decoration: none;
+}
+.arena-post-link:hover .arena-post-title { text-decoration: underline; }
+.arena-post-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.arena-post-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.74rem;
+    color: var(--color-text-muted);
+    min-width: 0;
+}
+.arena-post-author { color: var(--color-text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arena-post-stats { margin-left: auto; display: inline-flex; gap: 8px; flex-shrink: 0; }
+.arena-post-fire { color: #ff6b6b; font-weight: 700; }
+.arena-post-comments { color: var(--color-blue); }
+
+/* ---------------- 메인: 화력 TOP 5 (2026-09-24) ---------------- */
+.fire-top-card { border-color: rgba(239, 35, 60, 0.4); }
+.fire-top-list { list-style: none; margin: 0; padding: 0; }
+.fire-top-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 8px 0;
+}
+.fire-top-item + .fire-top-item { border-top: 1px solid var(--color-border); }
+.fire-top-link { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; color: var(--color-text); text-decoration: none; }
+.fire-top-link:hover .fire-top-title { text-decoration: underline; }
+.fire-top-title { font-size: 0.86rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fire-top-meta { font-size: 0.72rem; color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fire-top-count { flex-shrink: 0; font-size: 0.82rem; font-weight: 800; color: #ff6b6b; }
+
+/* ---------------- 메인: 독존의 전당 (최고 등급 회원, 2026-09-24) ---------------- */
+.dokjon-hall {
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(234, 179, 8, 0.55);
+    background:
+        radial-gradient(100% 70% at 50% -10%, rgba(234, 179, 8, 0.28), transparent 65%),
+        linear-gradient(180deg, #1c1708, var(--color-bg-card) 60%);
+}
+.dokjon-hall::after {
+    /* 은은하게 지나가는 금빛 광택 */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 35%, rgba(255, 236, 153, 0.10) 50%, transparent 65%);
+    transform: translateX(-100%);
+    animation: dokjon-shine 5s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes dokjon-shine { 0%, 55% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .dokjon-hall::after { animation: none; display: none; } }
+.main-card h2.dokjon-hall-title {
+    margin-bottom: 2px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    background: linear-gradient(90deg, #fff4c2, var(--color-gold) 45%, #b8860b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.dokjon-hall-crown { -webkit-text-fill-color: initial; color: initial; filter: drop-shadow(0 0 6px rgba(234, 179, 8, 0.7)); }
+.dokjon-hall-sub { margin: 0 0 var(--space-3); font-size: 0.75rem; color: var(--color-text-muted); }
+.dokjon-hall-sub strong { color: var(--color-gold); }
+.dokjon-hall-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: var(--space-2);
+}
+.dokjon-medal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    text-align: center;
+}
+.dokjon-medal-ring {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    padding: 3px;
+    background: conic-gradient(from 200deg, #fff4c2, #eab308, #8a6400, #eab308, #fff4c2);
+    box-shadow: 0 0 14px rgba(234, 179, 8, 0.45);
+}
+.dokjon-medal-initial {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #14110a;
+    color: #fff4c2;
+    font-size: 1.3rem;
+    font-weight: 900;
+}
+.dokjon-medal.party-conservative .dokjon-medal-initial { background: radial-gradient(circle at 50% 35%, #5a1420, #14110a 75%); }
+.dokjon-medal.party-democrat .dokjon-medal-initial { background: radial-gradient(circle at 50% 35%, #15306a, #14110a 75%); }
+.dokjon-medal-name {
+    max-width: 100%;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #fff4c2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.dokjon-medal-meta { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 3px; }
+.dokjon-medal-points { font-size: 0.7rem; font-weight: 700; color: var(--color-gold); }
+.dokjon-hall-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2) 0;
+    text-align: center;
+}
+.dokjon-hall-empty-seat { font-size: 2rem; opacity: 0.35; filter: grayscale(0.4); }
+.dokjon-hall-empty p { margin: 0; font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.6; }

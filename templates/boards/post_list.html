@@ -11,7 +11,34 @@
     {% endif %}
 </div>
 
+{% if hot_posts %}
+{# 2026-09-24: 화력(추천) BEST 10 - 일반 글 목록과 다르게 눈에 띄게 #}
+<section class="hot-board" aria-labelledby="hot-board-heading">
+    <h2 id="hot-board-heading" class="hot-board-title"><span class="hot-board-flame" aria-hidden="true">🔥</span>화력 BEST {{ hot_posts_count }}</h2>
+    <ol class="hot-list">
+        {% for post in hot_posts %}
+        <li class="hot-item{% if forloop.counter <= 3 %} hot-item-top{% endif %}">
+            <a href="{% url 'boards:post_detail' board.slug post.pk %}" class="hot-item-link">
+                <span class="hot-rank hot-rank-{{ forloop.counter }}">{{ forloop.counter }}</span>
+                <span class="hot-item-body">
+                    <span class="hot-item-title">{{ post.title }}</span>
+                    <span class="hot-item-meta">
+                        {% include "partials/party_badge.html" with member=post.author %}
+                        <span class="hot-item-author">{{ post.author.nickname }}</span>
+                        {% if show_demographics %}{% include "partials/author_demo.html" with member=post.author %}{% endif %}
+                        <span class="hot-item-comments">💬 {{ post.comment_count }}</span>
+                    </span>
+                </span>
+                <span class="hot-item-fire" aria-label="화력 {{ post.like_count }}"><span aria-hidden="true">🔥</span>{{ post.like_count }}</span>
+            </a>
+        </li>
+        {% endfor %}
+    </ol>
+</section>
+{% endif %}
+
 {% if page_obj.object_list %}
+{% if hot_posts %}<h2 class="board-section-title">전체 글</h2>{% endif %}
 <ul class="post-card-list">
     <li class="sr-only post-card-list-caption">{{ board.name }} 게시판 글 목록</li>
     {% for post in page_obj %}
@@ -26,6 +53,7 @@
                     <span class="author-badge">
                         {{ post.author.nickname }}
                         <span class="rank-chip">{{ post.author.rank_name }}</span>
+                        {% if show_demographics %}{% include "partials/author_demo.html" with member=post.author %}{% endif %}
                         {% if post.author.duel_record %}<span class="record-chip">{{ post.author.duel_record }}</span>{% endif %}
                     </span>
                     <span class="post-card-date">{{ post.created_at|date:"Y.m.d" }}</span>

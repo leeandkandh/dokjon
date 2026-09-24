@@ -12,6 +12,7 @@
             <span class="author-badge">
                 {{ post.author.nickname }}
                 <span class="rank-chip">{{ post.author.rank_name }}</span>
+                {% if show_demographics %}{% include "partials/author_demo.html" with member=post.author %}{% endif %}
                 {% if post.author.duel_record %}<span class="record-chip">{{ post.author.duel_record }}</span>{% endif %}
             </span>
             <span>{{ post.created_at|date:"Y.m.d H:i" }}</span>

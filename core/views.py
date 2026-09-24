@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Count
 from django.shortcuts import render
 
+from accounts.models import RANK_TIERS
 from boards.models import Post
 from duels.models import Duel
 from menus.models import Menu
@@ -20,8 +22,12 @@ def home(request):
     높은 글 TOP 5입니다 (2026-09-23, 참고 디자인 반영).
 
     9단계(포인트/일기토) 반영: "일기토 실시간 투표"와 "포인트 기반 명예의 전당"은
-    이제 실제 데이터로 연결됩니다. "팩트체크 검증대", "즉석 여론조사"는 여전히
-    설계 전이라 디자인만 넣고 "준비 중"으로 표시합니다.
+    실제 데이터로 연결됩니다.
+
+    2026-09-24: "준비 중"이던 팩트체크 검증대/즉석 여론조사 카드를 없애고,
+    그 자리에 "화력 TOP 5"(전체 게시판 추천수 상위 5개 글)와
+    "독존 등극"(최고 등급 독존에 오른 회원 전원)을 넣었습니다.
+    보수/민주 최신글에는 글쓴이·성별/나이대·화력·댓글수를 함께 보여줍니다.
     """
     conservative_board = Menu.objects.filter(slug='conservative', is_active=True).first()
     democrat_board = Menu.objects.filter(slug='democrat', is_active=True).first()
@@ -40,6 +46,19 @@ def home(request):
 
     top_posts = Post.objects.select_related('board', 'author').order_by('-view_count', '-created_at')[:5]
 
+    # 게시글에 댓글수/화력(추천수)을 붙이는 공통 쿼리 (2026-09-24)
+    counted_posts = (
+        Post.objects.select_related('board', 'author')
+        .annotate(comment_count=Count('comments', distinct=True), like_count=Count('likes', distinct=True))
+    )
+
+    # 2026-09-24: 전체 게시판 통틀어 화력(추천) 높은 글 TOP 5 (추천 0개인 글은 제외)
+    fire_top_posts = counted_posts.filter(like_count__gt=0).order_by('-like_count', '-created_at')[:5]
+
+    # 2026-09-24: 최고 등급 "독존"에 오른 회원 전원 (포인트 높은 순)
+    top_rank_points = RANK_TIERS[-1][0]
+    top_rank_members = User.objects.filter(points__gte=top_rank_points).order_by('-points', 'date_joined')
+
     # 9단계: 명예의 전당 - 포인트 상위 5명 (0점 회원은 아직 활동이 없는 것이므로 제외)
     hall_of_fame = User.objects.filter(points__gt=0).order_by('-points')[:5]
 
@@ -56,8 +75,12 @@ def home(request):
     context = {
         'page_title': '독존 - 정치 토론 커뮤니티',
         'meta_description': '독존은 보수와 민주 진영이 자유롭게 정치 토론을 나누는 정치 커뮤니티입니다.',
-        'conservative_posts': conservative_board.posts.select_related('author')[:5] if conservative_board else [],
-        'democrat_posts': democrat_board.posts.select_related('author')[:5] if democrat_board else [],
+        'conservative_posts': counted_posts.filter(board=conservative_board).order_by('-created_at')[:5] if conservative_board else [],
+        'democrat_posts': counted_posts.filter(board=democrat_board).order_by('-created_at')[:5] if democrat_board else [],
+        'fire_top_posts': fire_top_posts,
+        'top_rank_members': top_rank_members,
+        'top_rank_name': RANK_TIERS[-1][1],
+        'top_rank_points': top_rank_points,
         'conservative_percent': conservative_percent,
         'democrat_percent': democrat_percent,
         'total_member_count': total_count,

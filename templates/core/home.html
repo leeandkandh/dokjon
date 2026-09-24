@@ -77,9 +77,22 @@
     <article class="main-card" aria-labelledby="conservative-heading">
         <h2 id="conservative-heading"><span class="dot dot-red"></span>보수 아레나 최신글</h2>
         {% if conservative_posts %}
-        <ul class="ranking-list">
+        {# 2026-09-24: 제목 + 글쓴이(성별·나이대) + 화력/댓글 #}
+        <ul class="arena-post-list">
             {% for post in conservative_posts %}
-            <li><a href="{% url 'boards:post_detail' post.board.slug post.pk %}">{{ post.title }}</a></li>
+            <li>
+                <a href="{% url 'boards:post_detail' post.board.slug post.pk %}" class="arena-post-link">
+                    <span class="arena-post-title">{{ post.title }}</span>
+                    <span class="arena-post-meta">
+                        <span class="arena-post-author">{{ post.author.nickname }}</span>
+                        {% include "partials/author_demo.html" with member=post.author %}
+                        <span class="arena-post-stats">
+                            <span class="arena-post-fire" aria-label="화력 {{ post.like_count }}">🔥 {{ post.like_count }}</span>
+                            <span class="arena-post-comments" aria-label="댓글 {{ post.comment_count }}">💬 {{ post.comment_count }}</span>
+                        </span>
+                    </span>
+                </a>
+            </li>
             {% endfor %}
         </ul>
         {% else %}
@@ -123,9 +136,22 @@
     <article class="main-card" aria-labelledby="democrat-heading">
         <h2 id="democrat-heading"><span class="dot dot-blue"></span>민주 아레나 최신글</h2>
         {% if democrat_posts %}
-        <ul class="ranking-list">
+        {# 2026-09-24: 제목 + 글쓴이(성별·나이대) + 화력/댓글 #}
+        <ul class="arena-post-list">
             {% for post in democrat_posts %}
-            <li><a href="{% url 'boards:post_detail' post.board.slug post.pk %}">{{ post.title }}</a></li>
+            <li>
+                <a href="{% url 'boards:post_detail' post.board.slug post.pk %}" class="arena-post-link">
+                    <span class="arena-post-title">{{ post.title }}</span>
+                    <span class="arena-post-meta">
+                        <span class="arena-post-author">{{ post.author.nickname }}</span>
+                        {% include "partials/author_demo.html" with member=post.author %}
+                        <span class="arena-post-stats">
+                            <span class="arena-post-fire" aria-label="화력 {{ post.like_count }}">🔥 {{ post.like_count }}</span>
+                            <span class="arena-post-comments" aria-label="댓글 {{ post.comment_count }}">💬 {{ post.comment_count }}</span>
+                        </span>
+                    </span>
+                </a>
+            </li>
             {% endfor %}
         </ul>
         {% else %}
@@ -173,16 +199,47 @@
         {% endif %}
     </article>
 
-    <article class="main-card main-card-soon" aria-labelledby="factcheck-heading">
-        <h2 id="factcheck-heading"><span class="dot dot-teal"></span>실시간 팩트체크 검증대</h2>
-        <p class="main-card-soon-badge">준비 중</p>
-        <p class="main-card-empty">글이나 주장에 대한 사실 검증 기능은 아직 설계 전입니다.</p>
+    {# 2026-09-24: "팩트체크 검증대" 자리 → 전체 게시판 화력 TOP 5 #}
+    <article class="main-card fire-top-card" aria-labelledby="fire-top-heading">
+        <h2 id="fire-top-heading"><span class="dot dot-red"></span>🔥 화력 TOP 5</h2>
+        {% if fire_top_posts %}
+        <ol class="fire-top-list">
+            {% for post in fire_top_posts %}
+            <li class="fire-top-item">
+                <span class="hot-rank hot-rank-{{ forloop.counter }}">{{ forloop.counter }}</span>
+                <a href="{% url 'boards:post_detail' post.board.slug post.pk %}" class="fire-top-link">
+                    <span class="fire-top-title">{{ post.title }}</span>
+                    <span class="fire-top-meta">{{ post.board.name }} · {{ post.author.nickname }}</span>
+                </a>
+                <span class="fire-top-count">🔥 {{ post.like_count }}</span>
+            </li>
+            {% endfor %}
+        </ol>
+        {% else %}
+        <p class="main-card-empty">아직 화력을 받은 글이 없습니다. 마음에 드는 글에 🔥를 눌러주세요!</p>
+        {% endif %}
     </article>
 
-    <article class="main-card main-card-soon" aria-labelledby="poll-heading">
-        <h2 id="poll-heading"><span class="dot dot-purple"></span>오늘의 즉석 한 줄 여론조사</h2>
-        <p class="main-card-soon-badge">준비 중</p>
-        <p class="main-card-empty">짧은 설문/투표 기능은 아직 설계 전입니다.</p>
+    {# 2026-09-24: "즉석 여론조사" 자리 → 최고 등급 "독존"에 오른 회원 전원 #}
+    <article class="main-card dokjon-hall" aria-labelledby="dokjon-hall-heading">
+        <h2 id="dokjon-hall-heading" class="dokjon-hall-title"><span class="dokjon-hall-crown" aria-hidden="true">👑</span>독존 등극</h2>
+        <p class="dokjon-hall-sub">최고 등급 <strong>{{ top_rank_name }}</strong>({{ top_rank_points }}P↑)에 오른 회원 <strong>{{ top_rank_members|length }}명</strong></p>
+        {% if top_rank_members %}
+        <ul class="dokjon-hall-list">
+            {% for member in top_rank_members %}
+            <li class="dokjon-medal party-{{ member.party|default:'none' }}">
+                <span class="dokjon-medal-ring" aria-hidden="true"><span class="dokjon-medal-initial">{{ member.nickname|slice:":1" }}</span></span>
+                <span class="dokjon-medal-name">{{ member.nickname }}</span>
+                <span class="dokjon-medal-meta">{% include "partials/party_badge.html" with member=member %}<span class="dokjon-medal-points">{{ member.points }}P</span></span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="dokjon-hall-empty">
+            <span class="dokjon-hall-empty-seat" aria-hidden="true">👑</span>
+            <p>아직 독존에 오른 회원이 없습니다.<br>첫 번째 독존의 자리는 비어 있습니다.</p>
+        </div>
+        {% endif %}
     </article>
 </section>
 {% endblock %}

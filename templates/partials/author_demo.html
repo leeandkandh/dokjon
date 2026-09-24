@@ -1,0 +1,5 @@
+{% comment %}
+글쓴이 성별·나이대 칩 (2026-09-24, 보수/민주 아레나에서만 사용). 예) "남 · 30대"
+사용법: {% include "partials/author_demo.html" with member=post.author %}
+{% endcomment %}
+{% if member.gender_short or member.age_group %}<span class="demo-chip" title="성별 · 나이대">{% if member.gender_short %}<span class="demo-chip-gender demo-chip-{{ member.gender }}">{{ member.gender_short }}</span>{% endif %}{% if member.gender_short and member.age_group %}<span class="demo-chip-sep" aria-hidden="true">·</span>{% endif %}{% if member.age_group %}{{ member.age_group }}{% endif %}</span>{% endif %}

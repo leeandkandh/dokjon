@@ -59,6 +59,9 @@ def _save_post_images(post, files):
 PARTY_BOARD_SLUGS = {value for value, _label in PARTY_CHOICES}
 PARTY_LABELS = dict(PARTY_CHOICES)
 
+# 게시판 목록 맨 위 "화력 BEST" 개수 (2026-09-24)
+HOT_POSTS_COUNT = 10
+
 
 def can_write_in_board(user, board):
     """user가 board에 글/댓글을 쓸 수 있는지 여부."""
@@ -100,9 +103,20 @@ def post_list(request, slug):
     paginator = Paginator(post_qs, 20)
     page_obj = paginator.get_page(request.GET.get('page', 1))
 
+    # 2026-09-24: 목록 맨 위에 "화력(추천) BEST 10"을 따로 강조해서 보여줍니다 (1페이지에서만).
+    # 추천을 1개 이상 받은 글만, 화력 높은 순 → 같으면 최신순.
+    hot_posts = []
+    if page_obj.number == 1:
+        hot_posts = list(
+            post_qs.filter(like_count__gt=0).order_by('-like_count', '-created_at')[:HOT_POSTS_COUNT]
+        )
+
     context = {
         'board': board,
         'page_obj': page_obj,
+        'hot_posts': hot_posts,
+        'hot_posts_count': HOT_POSTS_COUNT,
+        'show_demographics': board.slug in PARTY_BOARD_SLUGS,
         'can_write': can_write_in_board(request.user, board),
         'page_title': f'{board.name} 게시판 - 독존',
         'meta_description': f'독존 {board.name} 게시판의 최신 글 목록입니다.',
@@ -146,6 +160,7 @@ def post_detail(request, slug, pk):
         'like_count': like_count,
         'user_has_liked': user_has_liked,
         'can_write': can_write_in_board(request.user, board),
+        'show_demographics': board.slug in PARTY_BOARD_SLUGS,
         # 2026-09-24: 1:1 일기토 신청 버튼 / 이 글에 진행중인 일기토
         'can_challenge': can_challenge_post(request.user, post),
         'active_duel': active_duel_for_post(post) if board.slug in PARTY_BOARD_SLUGS else None,
