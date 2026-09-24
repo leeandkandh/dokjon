@@ -76,6 +76,9 @@
     <div class="mypage-links">
         <a href="{% url 'accounts:password_change' %}" class="btn btn-ghost">비밀번호 변경</a>
     </div>
+
+    {# 2026-09-24: 회원 탈퇴 #}
+    <p class="mypage-withdraw"><a href="{% url 'accounts:withdraw' %}">회원 탈퇴</a></p>
     {% endwith %}
 </section>
 </div>

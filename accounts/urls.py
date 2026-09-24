@@ -11,4 +11,5 @@ urlpatterns = [
     path('check-email/', views.check_email, name='check_email'),
     path('mypage/', views.mypage, name='mypage'),
     path('mypage/password/', views.MyPasswordChangeView.as_view(), name='password_change'),
+    path('mypage/withdraw/', views.withdraw, name='withdraw'),
 ]

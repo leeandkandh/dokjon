@@ -86,6 +86,11 @@ class User(AbstractUser):
     duel_wins = models.PositiveIntegerField('일기토 승', default=0)
     duel_losses = models.PositiveIntegerField('일기토 패', default=0)
 
+    # 2026-09-24: 회원 탈퇴 시각. 탈퇴하면 개인정보를 지우고(익명화) 로그인을 막습니다.
+    # 행 자체를 지우지 않는 이유: 회원을 DB에서 삭제하면 그 회원이 참여한 일기토(상대방의 기록),
+    # 투표, 화력까지 연쇄 삭제되어 다른 회원의 기록이 망가지기 때문입니다.
+    withdrawn_at = models.DateTimeField('탈퇴일', null=True, blank=True)
+
     # createsuperuser 실행 시 아이디/비밀번호 외에 추가로 물어볼 필드
     REQUIRED_FIELDS = ['email', 'nickname']
 
@@ -102,6 +107,38 @@ class User(AbstractUser):
             else:
                 break
         return name
+
+    @property
+    def is_withdrawn(self):
+        return self.withdrawn_at is not None
+
+    def withdraw(self):
+        """회원 탈퇴 처리 (2026-09-24, 개인정보처리방침 5번 "파기" 기준).
+
+        - 아이디·이메일·생년월일·성별·진영(민감정보)을 지우고, 닉네임은 "탈퇴회원+번호"로 바꿉니다.
+        - 비밀번호를 사용할 수 없게 하고 is_active=False로 로그인을 막습니다.
+        - 포인트·전적은 0으로 (명예의 전당·독존 등극·등급 통계에서 빠지도록).
+        - 쓴 글/댓글은 남기되 작성자가 "탈퇴회원N"으로 보입니다(삭제는 뷰에서 선택 시 따로 처리).
+        """
+        from django.utils import timezone
+        from django.utils.crypto import get_random_string
+
+        self.username = f'deleted{self.pk}{get_random_string(6).lower()}'[:20]
+        self.nickname = f'탈퇴회원{self.pk}'[:15]
+        self.email = ''
+        self.first_name = ''
+        self.last_name = ''
+        self.birth_date = None
+        self.gender = ''
+        self.party = ''
+        self.points = 0
+        self.duel_wins = 0
+        self.duel_losses = 0
+        self.is_active = False
+        self.is_staff = False
+        self.withdrawn_at = timezone.now()
+        self.set_unusable_password()
+        self.save()
 
     @property
     def age_group(self):

@@ -12,13 +12,13 @@ class DokjonUserAdmin(UserAdmin):
     """
     list_display = (
         'username', 'nickname', 'email', 'party', 'gender', 'rank_name', 'points',
-        'duel_wins', 'duel_losses', 'is_suspended', 'is_staff', 'date_joined',
+        'duel_wins', 'duel_losses', 'is_suspended', 'is_staff', 'date_joined', 'withdrawn_at',
     )
-    list_filter = ('party', 'gender', 'is_suspended', 'is_staff', 'is_active')
+    list_filter = ('party', 'gender', 'is_suspended', 'is_staff', 'is_active', ('withdrawn_at', admin.EmptyFieldListFilter))
     search_fields = ('username', 'nickname', 'email')
     fieldsets = UserAdmin.fieldsets + (
         ('독존 추가 정보', {
-            'fields': ('nickname', 'birth_date', 'party', 'gender', 'is_suspended', 'points', 'duel_wins', 'duel_losses'),
+            'fields': ('nickname', 'birth_date', 'party', 'gender', 'is_suspended', 'points', 'duel_wins', 'duel_losses', 'withdrawn_at'),
         }),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (

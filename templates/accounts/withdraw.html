@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+{# 2026-09-24: 회원 탈퇴. 처리 내용은 accounts/models.py User.withdraw() 참고 #}
+<div class="auth-page">
+<section class="auth-card withdraw-card">
+    <h1>회원 탈퇴</h1>
+    <p class="withdraw-lead"><strong>{{ request.user.nickname }}</strong>님, 정말 떠나시나요? 탈퇴하기 전에 아래 내용을 꼭 확인해주세요.</p>
+
+    <ul class="withdraw-notice">
+        <li><strong>계정을 되살릴 수 없습니다.</strong> 같은 아이디로 다시 가입할 수는 있지만, 등급·포인트·일기토 전적은 모두 사라집니다.</li>
+        <li>아이디, 이메일, 생년월일, 성별, 진영 정보는 <strong>바로 삭제</strong>됩니다.</li>
+        <li>지금까지 쓴 <strong>글 {{ post_count }}개, 댓글 {{ comment_count }}개</strong>는 아래에서 삭제를 고르지 않으면 <strong>"탈퇴회원"</strong>이라는 이름으로 남습니다.</li>
+        <li>1:1 일기토 토론 글과 투표 기록은 상대방·다른 회원의 기록이라 삭제되지 않고 "탈퇴회원"으로 표시됩니다.</li>
+        <li>진행 중인 일기토가 있다면 그대로 끝까지 진행되고, 상대방의 승패 기록은 정상 반영됩니다.</li>
+    </ul>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="form-field">
+            <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+            {{ form.password }}
+            {% for error in form.password.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="form-field terms-field">
+            <label class="checkbox-label" for="{{ form.delete_content.id_for_label }}">
+                {{ form.delete_content }}
+                <span>{{ form.delete_content.label }}</span>
+            </label>
+            <label class="checkbox-label" for="{{ form.confirm.id_for_label }}">
+                {{ form.confirm }}
+                <span>{{ form.confirm.label }}</span>
+            </label>
+            {% for error in form.confirm.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-block btn-danger">탈퇴하기</button>
+        <a href="{% url 'accounts:mypage' %}" class="btn btn-ghost btn-block">취소하고 마이페이지로</a>
+    </form>
+</section>
+</div>
+{% endblock %}

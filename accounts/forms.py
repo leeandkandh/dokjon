@@ -113,3 +113,28 @@ class ProfileForm(forms.ModelForm):
         if User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError('이미 사용 중인 이메일입니다.')
         return email
+
+
+class WithdrawForm(forms.Form):
+    """회원 탈퇴 확인 폼 (2026-09-24). 본인 확인을 위해 현재 비밀번호를 다시 받습니다."""
+
+    password = forms.CharField(label='현재 비밀번호', widget=forms.PasswordInput(attrs={'autocomplete': 'current-password'}))
+    delete_content = forms.BooleanField(
+        label='내가 쓴 글과 댓글도 모두 삭제합니다. (체크하지 않으면 "탈퇴회원"이라는 이름으로 남습니다)',
+        required=False,
+    )
+    confirm = forms.BooleanField(
+        label='위 안내를 모두 확인했으며, 탈퇴 후에는 계정을 되살릴 수 없다는 것에 동의합니다.',
+        required=True,
+        error_messages={'required': '안내를 확인하고 동의해야 탈퇴할 수 있습니다.'},
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_password(self):
+        password = self.cleaned_data['password']
+        if not self.user.check_password(password):
+            raise forms.ValidationError('비밀번호가 올바르지 않습니다.')
+        return password

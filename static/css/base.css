@@ -2188,3 +2188,26 @@ a { color: inherit; }
     background-clip: text;
     color: transparent;
 }
+
+/* ---------------- 회원 탈퇴 (2026-09-24) ---------------- */
+.mypage-withdraw { margin: var(--space-4) 0 0; text-align: right; font-size: 0.78rem; }
+.mypage-withdraw a { color: var(--color-text-muted); text-decoration: underline; }
+.mypage-withdraw a:hover { color: var(--color-red); }
+.withdraw-card { max-width: 480px; }
+.withdraw-lead { margin: 0 0 var(--space-3); font-size: 0.9rem; line-height: 1.6; }
+.withdraw-notice {
+    margin: 0 0 var(--space-3);
+    padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-3) + 1em);
+    border-radius: 8px;
+    border: 1px solid rgba(239, 35, 60, 0.45);
+    background: rgba(239, 35, 60, 0.08);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: #d6d9df;
+}
+.withdraw-notice li { margin-bottom: 6px; }
+.withdraw-notice li:last-child { margin-bottom: 0; }
+.withdraw-notice strong { color: var(--color-text); }
+.btn-danger { background: var(--color-red); color: #fff; border: none; cursor: pointer; }
+.btn-danger:hover { background: var(--color-red-dark); }
+.withdraw-card .btn-ghost.btn-block { margin-top: var(--space-2); }
