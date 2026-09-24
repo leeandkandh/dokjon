@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+{% comment %}
+2026-09-24 작성. duels 앱의 실제 동작(신청 조건, 기간, 토론/투표 권한, 판정, 포인트)을 그대로 정리했습니다.
+기간·포인트 숫자는 duels/models.py 상수에서 가져옵니다.
+{% endcomment %}
+<article class="policy-page">
+    <header class="policy-header">
+        <p class="policy-kicker">⚡ 독존 DOKJON</p>
+        <h1>1:1 일기토 규칙</h1>
+        <p class="policy-meta">시행일: {{ effective_date }}</p>
+    </header>
+
+    <p class="policy-lead">일기토(一騎討)는 장수 둘이 진영을 대표해 1:1로 맞붙는 결투입니다. 독존의 일기토는 <strong>보수와 진보 회원이 하나의 글을 걸고 1:1 끝장토론</strong>을 벌이고, 다른 회원들의 투표로 승패를 가립니다.</p>
+
+    <ol class="duel-flow" aria-label="일기토 진행 순서">
+        <li><span class="duel-flow-num">1</span><strong>신청</strong><span>상대 진영 글에서 ⚡ 버튼</span></li>
+        <li><span class="duel-flow-num">2</span><strong>토론</strong><span>당사자 둘만 {{ duel_days }}일간</span></li>
+        <li><span class="duel-flow-num">3</span><strong>투표</strong><span>회원 1인 1표</span></li>
+        <li><span class="duel-flow-num">4</span><strong>판정</strong><span>마감 후 자동</span></li>
+    </ol>
+
+    <section>
+        <h2>1. 신청</h2>
+        <ul>
+            <li><strong>진보 회원</strong>은 보수 아레나의 보수 회원 글에, <strong>보수 회원</strong>은 민주 아레나의 진보 회원 글에 <strong>⚡ 1:1 일기토 신청</strong>을 할 수 있습니다.</li>
+            <li>같은 진영의 글, 내 글, 자유 게시판 글에는 신청할 수 없습니다.</li>
+            <li>한 글에는 <strong>동시에 하나의 일기토</strong>만 열립니다. 이미 진행 중이면 원본글에 "일기토 보러가기"가 표시됩니다.</li>
+            <li>신청하는 즉시 일기토 게시판에 대진이 열리고 투표가 시작됩니다. 신청한 사람이 <strong>도전자</strong>, 원본글을 쓴 사람이 <strong>상대</strong>가 됩니다.</li>
+            <li>운영자가 주제와 대진을 직접 정해 여는 일기토도 있습니다.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>2. 끝장토론</h2>
+        <ul>
+            <li>일기토 화면에는 <strong>원본글 → 투표판 → 끝장토론</strong> 순서로 보입니다.</li>
+            <li>토론 글은 <strong>도전자와 원본글 작성자, 두 사람만</strong> 쓸 수 있습니다. 다른 회원은 읽고 투표로 참여합니다.</li>
+            <li>토론 글 하나는 2,000자까지 쓸 수 있고, 본인 글은 삭제할 수 있습니다.</li>
+            <li>일기토에는 화력(추천) 기능이 없습니다. 오직 투표로만 승부합니다.</li>
+            <li>투표가 마감되면 토론 글도 더 쓸 수 없습니다.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>3. 투표</h2>
+        <ul>
+            <li>투표 기간은 신청 시점부터 <strong>{{ duel_days }}일</strong>입니다. 화면의 카운트다운으로 남은 시간을 확인할 수 있습니다.</li>
+            <li>로그인한 회원이라면 <strong>진영과 상관없이 누구나 1인 1표</strong>를 던질 수 있습니다. 한 번 투표하면 바꿀 수 없습니다.</li>
+            <li>일기토에 출전한 두 당사자는 투표할 수 없습니다.</li>
+            <li>누가 어느 쪽에 투표했는지는 공개되지 않고, 득표수와 비율만 보입니다.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>4. 판정과 보상</h2>
+        <div class="policy-table-wrap">
+        <table class="policy-table policy-table-compact">
+            <thead><tr><th scope="col">결과</th><th scope="col">전적</th><th scope="col">포인트</th></tr></thead>
+            <tbody>
+                <tr><td>득표가 더 많으면 <strong>승리</strong></td><td>1승 추가</td><td class="pt-plus">+{{ points_duel_win }}</td></tr>
+                <tr><td>득표가 더 적으면 패배</td><td>1패 추가</td><td class="pt-plus">+{{ points_duel_loss }} <span class="policy-note-inline">(참가 보상)</span></td></tr>
+                <tr><td>득표가 같으면 무승부</td><td>반영 안 함</td><td>없음</td></tr>
+            </tbody>
+        </table>
+        </div>
+        <ul>
+            <li>마감 시각이 지나면 자동으로 판정됩니다.</li>
+            <li>전적(예: 3승 1패)은 닉네임 옆에 표시되어 다른 회원에게 공개됩니다.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>5. 매너와 제재</h2>
+        <ul>
+            <li>일기토는 <strong>주장과 주장의 대결</strong>입니다. 상대를 조롱하거나 인신공격하는 글은 <a href="{% url 'core:guidelines' %}#g-rules">커뮤니티 가이드라인</a>에 따라 삭제·제재됩니다.</li>
+            <li>근거를 들 때는 출처를 밝혀주세요. 허위 사실로 이긴 승부는 인정받지 못합니다.</li>
+            <li>여러 계정으로 투표를 조작하면 해당 일기토 결과와 포인트가 취소되고, 관련 계정은 영구 정지됩니다.</li>
+            <li>원본글이 삭제되어도 일기토 기록(투표, 토론 글, 전적)은 그대로 남습니다.</li>
+            <li>일기토를 신청하거나 받는 것 자체만으로 포인트를 얻을 수는 없으며, 판정이 난 뒤에 지급됩니다.</li>
+        </ul>
+    </section>
+
+    <p class="policy-cta"><a href="{% url 'duels:duel_list' %}" class="btn duel-challenge-btn">⚡ 진행 중인 일기토 보러 가기</a></p>
+</article>
+{% endblock %}

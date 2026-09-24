@@ -1,8 +1,7 @@
 {% comment %}
-2026-09-23: 참고 디자인의 푸터 링크 구성으로 맞췄습니다. 실제로 연결된 페이지가
-있는 링크는 이용약관/개인정보처리방침뿐이고(가입폼의 임시 약관과 같은 자리),
-나머지(커뮤니티 가이드라인/1:1 일기토 규칙/광고·제휴 문의/고객센터)는 아직
-만든 페이지가 없어서 "#"로 남겨뒀습니다. 실제 페이지가 생기면 그때 연결하면 됩니다.
+2026-09-24: 푸터 링크를 실제 페이지로 모두 연결했습니다.
+(이용약관/개인정보처리방침/커뮤니티 가이드라인/1:1 일기토 규칙 = core 앱 안내 페이지,
+ 광고·제휴 문의/고객센터 = 문의 폼, 광고/제휴는 ?type=ad로 유형이 미리 선택됨)
 {% endcomment %}
 <div class="footer-inner">
     <div class="footer-brand">
@@ -10,12 +9,13 @@
         <p class="footer-tagline">뜻을 세우고, 독존하라. 대한민국 정치 토론 커뮤니티</p>
     </div>
     <nav class="footer-links" aria-label="약관 및 안내 메뉴">
-        <a href="#">이용약관</a>
-        <a href="#">개인정보처리방침</a>
-        <a href="#">커뮤니티 가이드라인</a>
-        <a href="#">1:1 일기토 규칙</a>
-        <a href="#">광고/제휴 문의</a>
-        <a href="#">고객센터</a>
+        <a href="{% url 'core:terms' %}">이용약관</a>
+        <a href="{% url 'core:privacy' %}" class="footer-link-strong">개인정보처리방침</a>
+        <a href="{% url 'core:guidelines' %}">커뮤니티 가이드라인</a>
+        <a href="{% url 'core:duel_rules' %}">1:1 일기토 규칙</a>
+        <a href="{% url 'core:contact' %}?type=ad">광고/제휴 문의</a>
+        <a href="{% url 'core:contact' %}">고객센터</a>
     </nav>
+    <p class="footer-contact">운영: 독존 운영자(개인) · 문의 <a href="mailto:dlrjsgmli@naver.com">dlrjsgmli@naver.com</a></p>
     <p class="footer-copyright">&copy; 2026 독존(dokjon). All rights reserved.</p>
 </div>

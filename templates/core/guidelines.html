@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+{% comment %}
+2026-09-24 작성. 지금까지 정한 독존의 운영 규칙을 한곳에 정리한 문서입니다.
+포인트·등급·일기토 수치는 코드 상수(boards/models.py, duels/models.py, accounts/models.py)를 그대로 보여주므로 수치를 바꾸면 자동 반영됩니다.
+{% endcomment %}
+<article class="policy-page">
+    <header class="policy-header">
+        <p class="policy-kicker">독존 DOKJON</p>
+        <h1>커뮤니티 가이드라인</h1>
+        <p class="policy-meta">시행일: {{ effective_date }}</p>
+    </header>
+
+    <p class="policy-lead">독존은 <strong>"뜻을 세우고, 독존하라"</strong>는 이름처럼 보수와 진보가 각자의 주장을 당당하게 펼치고, 정면으로 맞붙어 토론하는 곳입니다. 생각은 치열하게, 말은 품위 있게. 모두가 지켜야 할 약속을 정리했습니다.</p>
+
+    <div class="policy-callouts">
+        <div class="policy-callout"><span class="policy-callout-icon" aria-hidden="true">⚔️</span><strong>주장을 공격하되</strong><span>사람을 공격하지 않습니다</span></div>
+        <div class="policy-callout"><span class="policy-callout-icon" aria-hidden="true">📎</span><strong>근거를 대고</strong><span>허위 사실은 퍼뜨리지 않습니다</span></div>
+        <div class="policy-callout"><span class="policy-callout-icon" aria-hidden="true">🛡️</span><strong>개인정보는</strong><span>남의 것도 내 것도 지킵니다</span></div>
+    </div>
+
+    <section id="g-boards">
+        <h2>1. 게시판 안내</h2>
+        <div class="policy-table-wrap">
+        <table class="policy-table">
+            <thead><tr><th scope="col">게시판</th><th scope="col">읽기</th><th scope="col">글·댓글 쓰기</th><th scope="col">특징</th></tr></thead>
+            <tbody>
+                <tr><th scope="row"><span class="party-dot party-dot-red" aria-hidden="true"></span>보수 아레나</th><td class="nowrap">누구나</td><td><strong>보수</strong>로 가입한 회원만</td><td>글쓴이의 성별·나이대 표시, 진보 회원은 글에 1:1 일기토 신청 가능</td></tr>
+                <tr><th scope="row"><span class="party-dot party-dot-blue" aria-hidden="true"></span>민주 아레나</th><td class="nowrap">누구나</td><td><strong>진보</strong>로 가입한 회원만</td><td>글쓴이의 성별·나이대 표시, 보수 회원은 글에 1:1 일기토 신청 가능</td></tr>
+                <tr><th scope="row"><span class="party-dot party-dot-purple" aria-hidden="true"></span>일기토</th><td class="nowrap">누구나</td><td>토론은 두 당사자만, 투표는 회원 누구나</td><td>자세한 내용은 <a href="{% url 'core:duel_rules' %}">1:1 일기토 규칙</a></td></tr>
+                <tr><th scope="row"><span class="party-dot party-dot-teal" aria-hidden="true"></span>자유</th><td class="nowrap">누구나</td><td>회원 누구나</td><td>진영 상관없이 자유로운 이야기</td></tr>
+            </tbody>
+        </table>
+        </div>
+        <ul>
+            <li>화력(🔥 추천)은 진영과 상관없이 회원 누구나 누를 수 있습니다. 한 글에 한 번만 누를 수 있고, 다시 누르면 취소됩니다.</li>
+            <li>각 게시판 맨 위의 <strong>화력 BEST 10</strong>은 최근 {{ hot_posts_days }}일 안에 쓴 글 중 화력이 높은 순서입니다. 메인 화면의 <strong>화력 TOP 5</strong>도 같은 기준입니다.</li>
+            <li>조회수는 같은 사람이 같은 글을 여러 번 봐도 한 번만 올라갑니다.</li>
+            <li>이미지는 글 하나에 최대 5장, 장당 5MB까지 올릴 수 있습니다(jpg, png, gif, webp).</li>
+        </ul>
+    </section>
+
+    <section id="g-account">
+        <h2>2. 계정과 진영</h2>
+        <ul>
+            <li><strong>아이디·닉네임·진영은 가입 후 바꿀 수 없습니다.</strong> 진영별 게시판 권한과 일기토 전적을 믿을 수 있게 하기 위해서입니다.</li>
+            <li>이메일, 생년월일, 성별, 비밀번호는 마이페이지에서 바꿀 수 있습니다.</li>
+            <li>닉네임 옆에는 등급과 진영 뱃지(<span class="party-badge party-badge-conservative"><span class="party-badge-text">보수</span></span> <span class="party-badge party-badge-democrat"><span class="party-badge-text">진보</span></span>)가 표시됩니다.</li>
+            <li>한 사람이 여러 계정을 만들어 진영을 바꿔 활동하거나 화력·투표를 조작하는 것은 금지됩니다.</li>
+        </ul>
+    </section>
+
+    <section id="g-points">
+        <h2>3. 포인트</h2>
+        <div class="policy-table-wrap">
+        <table class="policy-table policy-table-compact">
+            <thead><tr><th scope="col">활동</th><th scope="col">포인트</th></tr></thead>
+            <tbody>
+                <tr><td>글쓰기 (모든 게시판)</td><td class="pt-plus">+{{ points_post_write }}</td></tr>
+                <tr><td>댓글 쓰기</td><td class="pt-plus">+{{ points_comment_write }}</td></tr>
+                <tr><td>내 글이 화력(추천)을 받을 때</td><td class="pt-plus">+{{ points_like_received }}</td></tr>
+                <tr><td>1:1 일기토 승리</td><td class="pt-plus">+{{ points_duel_win }}</td></tr>
+                <tr><td>1:1 일기토 패배 (참가 보상)</td><td class="pt-plus">+{{ points_duel_loss }}</td></tr>
+                <tr><td>내 글 삭제 (본인이 지우거나 운영자가 지운 경우 모두)</td><td class="pt-minus">−{{ points_post_delete }}</td></tr>
+            </tbody>
+        </table>
+        </div>
+        <p class="policy-note">포인트는 0점 아래로 내려가지 않으며, 현금이나 상품으로 바꿀 수 없습니다. 부정한 방법으로 얻은 포인트는 회수될 수 있습니다.</p>
+    </section>
+
+    <section id="g-ranks">
+        <h2>4. 등급</h2>
+        <p>포인트가 쌓이면 등급이 오릅니다. 최고 등급 <strong>독존</strong>에 오르면 메인 화면 <strong>"독존 등극"</strong>에 이름이 올라갑니다.</p>
+        <ol class="rank-ladder">
+            {% for threshold, name in rank_tiers %}
+            <li class="rank-ladder-step{% if forloop.last %} rank-ladder-top{% endif %}"><span class="rank-chip">{{ name }}</span><span class="rank-ladder-pt">{{ threshold }}P~</span></li>
+            {% endfor %}
+        </ol>
+    </section>
+
+    <section id="g-rules">
+        <h2>5. 금지 행위</h2>
+        <p>아래 행위는 게시물 삭제와 이용 제한 대상입니다.</p>
+        <ol>
+            <li><strong>인신공격·욕설·비하</strong>: 상대의 주장이 아니라 사람(외모, 나이, 성별, 지역, 출신 등)을 공격하는 글. 상대 진영 회원 전체를 싸잡아 모욕하는 표현도 포함됩니다.</li>
+            <li><strong>혐오 표현</strong>: 성별, 나이, 지역, 장애, 인종, 종교, 성적 지향 등을 이유로 한 차별·혐오 조장</li>
+            <li><strong>허위 사실·명예훼손</strong>: 사실이 아닌 내용을 사실처럼 퍼뜨리거나, 확인되지 않은 의혹으로 특정인의 명예를 훼손하는 글. 사실을 말할 때는 출처를 함께 밝혀주세요.</li>
+            <li><strong>개인정보 노출</strong>: 다른 사람의 실명, 연락처, 주소, 직장, 얼굴 사진 등을 동의 없이 올리는 행위(이른바 "신상털기")</li>
+            <li><strong>폭력 조장·위협</strong>: 폭력, 테러, 자해를 부추기거나 특정인을 위협하는 글</li>
+            <li><strong>불법 정보</strong>: 음란물, 불법 촬영물, 도박, 마약, 불법 거래 등</li>
+            <li><strong>도배·광고</strong>: 같은 내용 반복 게시, 무관한 홍보·광고 글, 링크 도배</li>
+            <li><strong>조작</strong>: 여러 계정으로 화력·일기토 투표를 조작하거나, 포인트를 얻기 위해 의미 없는 글·댓글을 반복하는 행위</li>
+            <li><strong>사칭</strong>: 운영자, 정치인, 언론사, 다른 회원을 사칭하는 행위</li>
+            <li><strong>선거법 위반</strong>: 선거 기간의 허위 사실 공표, 비방, 불법 여론조사 결과 게시 등 공직선거법 위반 행위</li>
+        </ol>
+        <p class="policy-note">아이디, 닉네임, 글 제목·내용에 금칙어가 들어가면 등록이 자동으로 막힙니다.</p>
+    </section>
+
+    <section id="g-sanctions">
+        <h2>6. 제재 절차</h2>
+        <div class="policy-table-wrap">
+        <table class="policy-table policy-table-compact">
+            <thead><tr><th scope="col">단계</th><th scope="col">조치</th></tr></thead>
+            <tbody>
+                <tr><td>1단계</td><td>게시물 삭제 + 경고</td></tr>
+                <tr><td>2단계</td><td>7일 이용 정지</td></tr>
+                <tr><td>3단계</td><td>30일 이용 정지</td></tr>
+                <tr><td>4단계</td><td>영구 이용 정지</td></tr>
+            </tbody>
+        </table>
+        </div>
+        <ul>
+            <li>위반의 정도에 따라 단계를 건너뛸 수 있습니다. 불법 정보, 개인정보 노출, 계정 도용, 투표 조작은 <strong>바로 영구 정지</strong>될 수 있습니다.</li>
+            <li>운영자가 삭제한 글도 글쓴이의 포인트가 {{ points_post_delete }}점 차감됩니다.</li>
+            <li>제재에 이의가 있으면 <a href="{% url 'core:contact' %}">고객센터</a>로 알려주세요. 확인 후 답변드립니다.</li>
+            <li>문제가 되는 글을 발견하면 <a href="{% url 'core:contact' %}">고객센터</a>로 글 주소와 함께 알려주세요. (게시물 신고 버튼은 준비 중입니다)</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>7. 운영 원칙</h2>
+        <ul>
+            <li>운영자는 어느 진영의 편도 들지 않습니다. 삭제와 제재는 <strong>주장의 내용이 아니라 표현 방식과 규칙 위반</strong>을 기준으로 합니다.</li>
+            <li>이 가이드라인은 서비스 상황에 맞게 바뀔 수 있으며, 바뀔 때는 미리 공지합니다.</li>
+            <li>가이드라인에 없는 내용은 <a href="{% url 'core:terms' %}">이용약관</a>과 관계 법령을 따릅니다.</li>
+        </ul>
+    </section>
+</article>
+{% endblock %}

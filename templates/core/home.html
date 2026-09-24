@@ -201,7 +201,7 @@
 
     {# 2026-09-24: "팩트체크 검증대" 자리 → 전체 게시판 화력 TOP 5 #}
     <article class="main-card fire-top-card" aria-labelledby="fire-top-heading">
-        <h2 id="fire-top-heading"><span class="dot dot-red"></span>🔥 화력 TOP 5</h2>
+        <h2 id="fire-top-heading"><span class="dot dot-red"></span>🔥 화력 TOP 5 <span class="card-period">최근 {{ hot_posts_days }}일</span></h2>
         {% if fire_top_posts %}
         <ol class="fire-top-list">
             {% for post in fire_top_posts %}
@@ -216,7 +216,7 @@
             {% endfor %}
         </ol>
         {% else %}
-        <p class="main-card-empty">아직 화력을 받은 글이 없습니다. 마음에 드는 글에 🔥를 눌러주세요!</p>
+        <p class="main-card-empty">최근 {{ hot_posts_days }}일 동안 화력을 받은 글이 없습니다. 마음에 드는 글에 🔥를 눌러주세요!</p>
         {% endif %}
     </article>
 

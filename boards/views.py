@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
@@ -6,6 +8,7 @@ from django.db.models import Count, F, Value
 from django.db.models.functions import Greatest
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 
@@ -59,8 +62,9 @@ def _save_post_images(post, files):
 PARTY_BOARD_SLUGS = {value for value, _label in PARTY_CHOICES}
 PARTY_LABELS = dict(PARTY_CHOICES)
 
-# 게시판 목록 맨 위 "화력 BEST" 개수 (2026-09-24)
+# 게시판 목록 맨 위 "화력 BEST" 개수와 대상 기간(최근 N일) (2026-09-24)
 HOT_POSTS_COUNT = 10
+HOT_POSTS_DAYS = 7
 
 
 def can_write_in_board(user, board):
@@ -105,10 +109,13 @@ def post_list(request, slug):
 
     # 2026-09-24: 목록 맨 위에 "화력(추천) BEST 10"을 따로 강조해서 보여줍니다 (1페이지에서만).
     # 추천을 1개 이상 받은 글만, 화력 높은 순 → 같으면 최신순.
+    # 2026-09-24 추가 결정: 최근 7일 안에 쓴 글만 대상 (오래된 인기글이 계속 상위에 남지 않게)
     hot_posts = []
     if page_obj.number == 1:
+        hot_since = timezone.now() - timedelta(days=HOT_POSTS_DAYS)
         hot_posts = list(
-            post_qs.filter(like_count__gt=0).order_by('-like_count', '-created_at')[:HOT_POSTS_COUNT]
+            post_qs.filter(like_count__gt=0, created_at__gte=hot_since)
+            .order_by('-like_count', '-created_at')[:HOT_POSTS_COUNT]
         )
 
     context = {
@@ -116,6 +123,7 @@ def post_list(request, slug):
         'page_obj': page_obj,
         'hot_posts': hot_posts,
         'hot_posts_count': HOT_POSTS_COUNT,
+        'hot_posts_days': HOT_POSTS_DAYS,
         'show_demographics': board.slug in PARTY_BOARD_SLUGS,
         'can_write': can_write_in_board(request.user, board),
         'page_title': f'{board.name} 게시판 - 독존',

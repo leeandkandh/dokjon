@@ -14,7 +14,7 @@
 {% if hot_posts %}
 {# 2026-09-24: 화력(추천) BEST 10 - 일반 글 목록과 다르게 눈에 띄게 #}
 <section class="hot-board" aria-labelledby="hot-board-heading">
-    <h2 id="hot-board-heading" class="hot-board-title"><span class="hot-board-flame" aria-hidden="true">🔥</span>화력 BEST {{ hot_posts_count }}</h2>
+    <h2 id="hot-board-heading" class="hot-board-title"><span class="hot-board-flame" aria-hidden="true">🔥</span>화력 BEST {{ hot_posts_count }}<span class="hot-board-period">최근 {{ hot_posts_days }}일</span></h2>
     <ol class="hot-list">
         {% for post in hot_posts %}
         <li class="hot-item{% if forloop.counter <= 3 %} hot-item-top{% endif %}">

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+<section class="auth-card contact-card contact-done">
+    <p class="contact-done-icon" aria-hidden="true">✉️</p>
+    <h1>문의가 접수되었습니다</h1>
+    <p class="contact-lead">확인 후 적어주신 이메일로 회신드리겠습니다. 개인이 운영하는 서비스라 답변까지 며칠 걸릴 수 있는 점 양해 부탁드립니다.</p>
+    <a href="{% url 'core:home' %}" class="btn btn-primary btn-block">메인으로</a>
+</section>
+</div>
+{% endblock %}

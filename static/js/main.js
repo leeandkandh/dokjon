@@ -94,9 +94,12 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
 
             // 약관 동의 체크
-            if (agreeCheckbox && !agreeCheckbox.checked) {
+            // 2026-09-24: 민감정보(진영) 별도 동의 체크박스도 같이 확인
+            var sensitiveCheckbox = document.getElementById('id_agree_sensitive');
+            var unchecked = [agreeCheckbox, sensitiveCheckbox].filter(function (box) { return box && !box.checked; })[0];
+            if (unchecked) {
                 if (termsError) termsError.hidden = false;
-                agreeCheckbox.focus();
+                unchecked.focus();
                 return;
             }
             if (termsError) termsError.hidden = true;

@@ -166,6 +166,28 @@ LOGIN_REDIRECT_URL = 'core:home'
 LOGOUT_REDIRECT_URL = 'core:home'
 
 
+# ---------------- 문의(광고/제휴, 고객센터) 메일 (2026-09-24) ----------------
+# 문의 폼에 접수된 내용은 ① DB(관리자 > 문의 관리)에 항상 저장되고 ② 아래 주소로 메일이 발송됩니다.
+CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'dlrjsgmli@naver.com')
+
+# 메일 발송 설정: .env에 EMAIL_HOST_USER / EMAIL_HOST_PASSWORD를 넣으면 실제로 발송됩니다.
+# (네이버 메일 기준: 네이버 메일 > 환경설정 > POP3/IMAP 설정에서 "IMAP/SMTP 사용"을 켜고,
+#  2단계 인증을 쓰는 경우 "애플리케이션 비밀번호"를 발급받아 EMAIL_HOST_PASSWORD에 넣으세요)
+# 값이 없으면 실제로 보내지 않고 runserver 창(콘솔)에 메일 내용을 출력만 합니다 → 개발용.
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.naver.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '465'))
+EMAIL_USE_SSL = _env_bool('EMAIL_USE_SSL', True)
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_TIMEOUT = 10
+# 네이버 SMTP는 보내는 사람 주소가 로그인한 네이버 계정과 같아야 발송됩니다.
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@dokjon.com')
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 

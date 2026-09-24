@@ -72,27 +72,37 @@
         </div>
 
         <div class="form-field terms-field">
-            {% comment %}
-            실제 이용약관/개인정보처리방침 문구는 아직 확정되지 않았습니다 (요구사항 12장 3번).
-            아래는 임시 텍스트이며, 서비스 오픈 전 정식 약관으로 반드시 교체해야 합니다.
-            {% endcomment %}
+            {# 2026-09-24: 임시 약관 문구 → 정식 약관 요약 + 전문 링크, 민감정보 별도 동의 추가 #}
             <label class="form-field-title">약관 동의</label>
             <div class="terms-box" tabindex="0">
-                <p><strong>[임시] 독존 서비스 이용약관 및 개인정보 수집·이용 동의 (초안)</strong></p>
-                <p>본 약관은 독존(이하 "회사")이 제공하는 서비스 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항을 정합니다. (실제 서비스 오픈 전 정식 약관으로 교체 예정)</p>
-                <p>1. 회원은 본 약관에 동의함으로써 서비스 이용 자격을 얻습니다.</p>
-                <p>2. 회사가 수집하는 개인정보 항목: 아이디, 닉네임, 이메일, 생년월일, 진영(보수/진보) 정보</p>
-                <p>3. 수집한 개인정보는 서비스 제공 및 회원 관리 목적 외에는 사용하지 않습니다.</p>
-                <p>4. 회원은 마이페이지 또는 회원 탈퇴를 통해 언제든지 개인정보 삭제를 요청할 수 있습니다.</p>
-                <p>5. 회사는 관련 법령이 정하는 바에 따라 회원의 개인정보를 안전하게 관리합니다.</p>
-                <p>(이하 생략 — 정식 약관/개인정보처리방침 작성 전까지의 임시 문구입니다)</p>
+                <p><strong>이용약관 및 개인정보 수집·이용 안내 (요약)</strong></p>
+                <p>· 독존은 개인 개발자가 무료로 운영하는 정치 토론 커뮤니티입니다. 만 14세 이상만 가입할 수 있습니다.</p>
+                <p>· 수집 항목: 아이디, 비밀번호(암호화 저장), 닉네임, 이메일, 생년월일, 성별 / 서비스 이용 중 게시글·댓글·추천·투표 기록, 접속 IP·쿠키</p>
+                <p>· 이용 목적: 회원 식별과 로그인, 게시판·일기토 운영, 성별·나이대 표시(보수/민주 아레나), 부정 이용 방지, 문의 응대</p>
+                <p>· 보유 기간: 회원 탈퇴 시까지 (탈퇴 요청 시 지체 없이 파기, 법령상 보관 의무가 있는 정보는 그 기간 동안 보관)</p>
+                <p>· 동의를 거부할 수 있으나, 필수 항목에 동의하지 않으면 회원가입이 불가합니다.</p>
+                <p>자세한 내용은 <a href="{% url 'core:terms' %}" target="_blank" rel="noopener">이용약관</a>과 <a href="{% url 'core:privacy' %}" target="_blank" rel="noopener">개인정보처리방침</a> 전문을 확인해주세요.</p>
             </div>
             <label class="checkbox-label" for="{{ form.agree_terms.id_for_label }}">
                 {{ form.agree_terms }}
                 <span>{{ form.agree_terms.label }}</span>
             </label>
             {% for error in form.agree_terms.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
-            <p class="form-error" id="terms-js-error" hidden>약관에 동의해야 회원가입을 진행할 수 있습니다.</p>
+
+            <div class="terms-box terms-box-sensitive" tabindex="0">
+                <p><strong>민감정보(정치적 성향) 수집·이용 별도 동의</strong></p>
+                <p>· 수집 항목: 진영(보수/진보) — 개인정보 보호법 제23조의 "정치적 견해"에 해당하는 민감정보입니다.</p>
+                <p>· 이용 목적: 보수/민주 아레나 글쓰기·댓글 권한 부여, 1:1 일기토 신청 자격 확인, 닉네임 옆 진영 표시, 메인 화면 진영 비율 통계(개인 식별 불가한 합계만)</p>
+                <p>· 보유 기간: 회원 탈퇴 시까지</p>
+                <p>· 진영은 가입 후 변경할 수 없으며, 닉네임 옆에 다른 회원에게 공개됩니다.</p>
+                <p>· 동의를 거부할 수 있으나, 독존은 진영 기반 토론 서비스이므로 동의하지 않으면 가입할 수 없습니다.</p>
+            </div>
+            <label class="checkbox-label" for="{{ form.agree_sensitive.id_for_label }}">
+                {{ form.agree_sensitive }}
+                <span>{{ form.agree_sensitive.label }}</span>
+            </label>
+            {% for error in form.agree_sensitive.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            <p class="form-error" id="terms-js-error" hidden>필수 약관 2개에 모두 동의해야 회원가입을 진행할 수 있습니다.</p>
         </div>
 
         <button type="submit" class="btn btn-primary btn-block">가입하기</button>
