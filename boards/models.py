@@ -12,7 +12,9 @@ _FIRST_IMG_SRC_RE = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECAS
 # 9단계(포인트) 요청으로 목업 화면(댓글수/추천수)을 실제로 동작하게 만들면서
 # 함께 도입한 활동 포인트. 글/댓글 삭제 시에는 따로 차감하지 않습니다(일반적인
 # 커뮤니티 정책과 동일 - 어뷰징 방지는 11단계 신고/보안에서 별도로 다룰 예정).
-POINTS_POST_WRITE = 10
+# 2026-09-24 변경: 모든 게시판 글쓰기 +2점, 글 삭제 시 -3점 (0점 밑으로는 안 내려감)
+POINTS_POST_WRITE = 2
+POINTS_POST_DELETE = 3
 POINTS_COMMENT_WRITE = 2
 POINTS_LIKE_RECEIVED = 1
 

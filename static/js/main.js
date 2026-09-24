@@ -239,6 +239,23 @@ document.addEventListener('DOMContentLoaded', function () {
         var strong = el.querySelector('strong');
         if (!strong) return;
 
+        // 2026-09-24: 일기토 기간이 3일이라 "일" 단위 추가 + 페이지가 열리자마자 바로 표시
+        // (전에는 1초 뒤에야 바뀌어서 처음에 "259193초"처럼 보였음)
+        function render() {
+            var d = Math.floor(remaining / 86400);
+            var h = Math.floor((remaining % 86400) / 3600);
+            var m = Math.floor((remaining % 3600) / 60);
+            var s = remaining % 60;
+            if (d > 0) {
+                strong.textContent = d + '일 ' + h + '시간 ' + m + '분';
+            } else if (h > 0) {
+                strong.textContent = h + '시간 ' + m + '분 ' + s + '초';
+            } else {
+                strong.textContent = m > 0 ? (m + '분 ' + s + '초') : (s + '초');
+            }
+        }
+        render();
+
         var timer = setInterval(function () {
             remaining -= 1;
             if (remaining <= 0) {
@@ -247,12 +264,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 el.textContent = '투표가 마감되었습니다. 결과를 확인해보세요.';
                 return;
             }
-            var h = Math.floor(remaining / 3600);
-            var m = Math.floor((remaining % 3600) / 60);
-            var s = remaining % 60;
-            strong.textContent = h > 0
-                ? (h + '시간 ' + m + '분 ' + s + '초')
-                : (m > 0 ? (m + '분 ' + s + '초') : (s + '초'));
+            render();
         }, 1000);
     });
 

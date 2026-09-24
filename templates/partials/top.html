@@ -12,18 +12,20 @@ TOP 영역: 로고(이미지) + 태그라인 + 회원 상태별 버튼
 
     <div class="top-actions">
         {% if request.user.is_authenticated %}
-            {# 2026-09-24: [등급] 닉네임 | 마이페이지 | 로그아웃 #}
+            {# 2026-09-24: [등급] [진영뱃지] 닉네임 | 마이페이지 | 로그아웃 #}
             <span class="top-user">
                 <span class="rank-chip">{{ request.user.rank_name }}</span>
+                {% include "partials/party_badge.html" with member=request.user %}
                 <span class="top-nickname">{{ request.user.nickname|default:request.user.username }}</span>
             </span>
             <span class="top-sep" aria-hidden="true">|</span>
-            <a href="{% url 'accounts:mypage' %}" class="top-link">마이페이지</a>
+            {# 폰(767px 이하)에서는 글자 대신 아이콘으로 보여서 닉네임 공간을 확보합니다 #}
+            <a href="{% url 'accounts:mypage' %}" class="top-link" title="마이페이지"><svg class="top-link-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="top-link-text">마이페이지</span></a>
             <span class="top-sep" aria-hidden="true">|</span>
             {# Django 5부터 로그아웃은 POST로만 가능해서 링크 대신 작은 폼 버튼을 씁니다 #}
             <form action="{% url 'logout' %}" method="post" class="top-logout-form">
                 {% csrf_token %}
-                <button type="submit" class="top-link top-link-button">로그아웃</button>
+                <button type="submit" class="top-link top-link-button" title="로그아웃"><svg class="top-link-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="top-link-text">로그아웃</span></button>
             </form>
         {% else %}
             <a href="{% url 'login' %}" class="btn btn-ghost">로그인</a>

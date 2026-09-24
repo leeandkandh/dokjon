@@ -1,11 +1,18 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+
 
 # 9단계: 일기토(1:1 끝장토론) 승/패에 지급하는 포인트.
 # 글쓰기/댓글/추천 포인트는 boards/models.py에 있습니다.
 POINTS_DUEL_WIN = 50
 POINTS_DUEL_LOSS = 10  # 져도 참가 자체에 포인트를 줘서 도전을 장려합니다.
+
+# 2026-09-24: 게시글에서 "1:1 일기토 신청"으로 만들어진 듀얼의 투표 기간.
+# 신청 즉시 진행중(active)으로 시작하고, 이 기간이 지나면 득표수로 승패가 자동 판정됩니다.
+DUEL_DURATION = timedelta(days=3)
 
 
 class Duel(models.Model):
@@ -53,6 +60,18 @@ class Duel(models.Model):
         null=True,
         blank=True,
         related_name='duels_won',
+    )
+
+    # 2026-09-24: 보수/민주 아레나 게시글에서 상대 진영 회원이 "1:1 일기토 신청"을 누르면
+    # 그 글(원본글)을 걸고 듀얼이 생깁니다. 관리자가 직접 등록한 듀얼은 원본글이 없습니다(null).
+    # 원본글이 나중에 삭제돼도 듀얼 기록은 남도록 SET_NULL.
+    source_post = models.ForeignKey(
+        'boards.Post',
+        verbose_name='원본글',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='duels',
     )
 
     created_at = models.DateTimeField('등록일', auto_now_add=True)
@@ -159,3 +178,29 @@ class DuelVote(models.Model):
 
     def __str__(self):
         return f'{self.duel.topic} - {self.voter.nickname}: {self.get_side_display()}'
+
+
+class DuelComment(models.Model):
+    """일기토 토론 댓글 (2026-09-24).
+
+    읽기는 누구나 가능하지만, 쓰기는 듀얼 당사자(신청자 = challenger, 원본글 작성자 = opponent)만
+    가능합니다. 일반 게시판 댓글(boards.Comment)과 달리 추천(화력) 기능이 없습니다.
+    """
+
+    duel = models.ForeignKey(Duel, verbose_name='일기토', on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='작성자',
+        on_delete=models.CASCADE,
+        related_name='duel_comments',
+    )
+    content = models.TextField('내용', max_length=2000)
+    created_at = models.DateTimeField('작성일', auto_now_add=True)
+
+    class Meta:
+        verbose_name = '일기토 토론 댓글'
+        verbose_name_plural = '일기토 토론 댓글 관리'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'{self.duel.topic} - {self.author.nickname}'

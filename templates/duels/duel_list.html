@@ -18,13 +18,13 @@
     </h2>
 
     <div class="duel-widget-sides">
-        <div class="duel-side duel-side-challenger">
+        <div class="duel-side duel-side-challenger party-{{ current_duel.challenger.party|default:'conservative' }}">
             <span class="duel-side-name">{{ current_duel.challenger.nickname }}</span>
             <span class="rank-chip">{{ current_duel.challenger.rank_name }}</span>
             <span class="duel-side-percent">{{ current_duel.challenger_percent }}%</span>
         </div>
         <span class="duel-widget-vs">VS</span>
-        <div class="duel-side duel-side-opponent">
+        <div class="duel-side duel-side-opponent party-{{ current_duel.opponent.party|default:'democrat' }}">
             <span class="duel-side-percent">{{ current_duel.opponent_percent }}%</span>
             <span class="rank-chip">{{ current_duel.opponent.rank_name }}</span>
             <span class="duel-side-name">{{ current_duel.opponent.nickname }}</span>
@@ -32,8 +32,8 @@
     </div>
 
     <div class="duel-widget-bar">
-        <div class="duel-widget-bar-fill duel-widget-bar-fill-challenger" style="width: {{ current_duel.challenger_percent }}%;"></div>
-        <div class="duel-widget-bar-fill duel-widget-bar-fill-opponent" style="width: {{ current_duel.opponent_percent }}%;"></div>
+        <div class="duel-widget-bar-fill duel-widget-bar-fill-challenger party-{{ current_duel.challenger.party|default:'conservative' }}" style="width: {{ current_duel.challenger_percent }}%;"></div>
+        <div class="duel-widget-bar-fill duel-widget-bar-fill-opponent party-{{ current_duel.opponent.party|default:'democrat' }}" style="width: {{ current_duel.opponent_percent }}%;"></div>
     </div>
 
     <p class="duel-widget-countdown" data-duel-countdown="{{ current_duel.seconds_remaining }}">

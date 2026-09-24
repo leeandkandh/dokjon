@@ -4,61 +4,150 @@
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
 {% block content %}
+{% comment %}
+2026-09-24 개편: 게시글에서 신청된 일기토는 [원본글] → [투표판(양쪽 닉네임)] → [당사자 전용 토론] 순서로 보여줍니다.
+추천(화력) 기능은 일기토에는 없습니다. 색은 순서(도전자/상대)가 아니라 각자의 진영(보수=빨강, 진보=파랑)을 따릅니다.
+{% endcomment %}
 <article class="duel-detail">
     <header class="post-detail-header">
-        <p class="post-detail-board"><a href="{% url 'duels:duel_list' %}">일기토</a></p>
+        <p class="post-detail-board"><a href="{% url 'duels:duel_list' %}">⚡ 일기토 (1:1 끝장토론)</a></p>
         <h1 class="post-detail-title">{{ duel.topic }}</h1>
         {% if duel.description %}<p class="duel-detail-desc">{{ duel.description }}</p>{% endif %}
         <div class="post-detail-meta">
-            <span>{{ duel.get_status_display }}</span>
+            <span class="duel-status duel-status-{{ duel.status }}">{{ duel.get_status_display }}</span>
             <span>{{ duel.start_at|date:"Y.m.d H:i" }} ~ {{ duel.end_at|date:"Y.m.d H:i" }}</span>
             <span>총 투표 {{ duel.total_votes }}표</span>
         </div>
     </header>
 
-    <div class="duel-widget-sides">
-        <div class="duel-side duel-side-challenger">
-            <span class="duel-side-name">{{ duel.challenger.nickname }}</span>
-            <span class="rank-chip">{{ duel.challenger.rank_name }}</span>
-            {% if duel.challenger.duel_record %}<span class="record-chip">{{ duel.challenger.duel_record }}</span>{% endif %}
-            <span class="duel-side-percent">{{ duel.challenger_percent }}% ({{ duel.challenger_votes }}표)</span>
+    {% if source_post %}
+    <section class="duel-source" aria-labelledby="duel-source-heading">
+        <div class="duel-source-head">
+            <h2 id="duel-source-heading" class="duel-source-label">원본글</h2>
+            <a href="{% url 'boards:post_detail' source_post.board.slug source_post.pk %}" class="duel-source-link">{{ source_post.board.name }}에서 보기 →</a>
         </div>
-        <span class="duel-widget-vs">VS</span>
-        <div class="duel-side duel-side-opponent">
-            <span class="duel-side-percent">{{ duel.opponent_percent }}% ({{ duel.opponent_votes }}표)</span>
-            {% if duel.opponent.duel_record %}<span class="record-chip">{{ duel.opponent.duel_record }}</span>{% endif %}
-            <span class="rank-chip">{{ duel.opponent.rank_name }}</span>
-            <span class="duel-side-name">{{ duel.opponent.nickname }}</span>
+        <p class="duel-source-title">{{ source_post.title }}</p>
+        <p class="duel-source-author">
+            {% include "partials/party_badge.html" with member=source_post.author %}
+            <strong>{{ source_post.author.nickname }}</strong>
+            <span class="rank-chip">{{ source_post.author.rank_name }}</span>
+            <span class="duel-source-date">{{ source_post.created_at|date:"Y.m.d H:i" }}</span>
+        </p>
+        {% if source_post.images.all %}
+        <div class="post-detail-images">
+            {% for image in source_post.images.all %}
+            <img src="{{ image.image.url }}" alt="{{ source_post.title }} 첨부 이미지" loading="lazy">
+            {% endfor %}
         </div>
-    </div>
-
-    <div class="duel-widget-bar">
-        <div class="duel-widget-bar-fill duel-widget-bar-fill-challenger" style="width: {{ duel.challenger_percent }}%;"></div>
-        <div class="duel-widget-bar-fill duel-widget-bar-fill-opponent" style="width: {{ duel.opponent_percent }}%;"></div>
-    </div>
-
-    {% if duel.status == 'finished' %}
-    <p class="duel-result">
-        {% if duel.winner %}🏆 {{ duel.winner.nickname }} 승리{% else %}무승부로 종료되었습니다{% endif %}
-    </p>
-    {% elif user_vote %}
-    <p class="duel-result">이미 "{{ user_vote.get_side_display }}"에 투표하셨습니다. 결과는 마감 후 확정됩니다.</p>
-    {% elif duel.is_voting_open %}
-    <p class="duel-widget-countdown" data-duel-countdown="{{ duel.seconds_remaining }}">
-        투표 마감까지 <strong>{{ duel.seconds_remaining }}초</strong>
-    </p>
-        {% if request.user.is_authenticated %}
-        <form action="{% url 'duels:duel_vote' duel.pk %}" method="post" class="duel-vote-form">
-            {% csrf_token %}
-            <button type="submit" name="side" value="challenger" class="btn btn-primary">{{ duel.challenger.nickname }}에게 투표</button>
-            <button type="submit" name="side" value="opponent" class="btn btn-primary">{{ duel.opponent.nickname }}에게 투표</button>
-        </form>
-        {% else %}
-        <p class="comment-login-notice"><a href="{% url 'login' %}">로그인</a> 후 투표할 수 있습니다.</p>
         {% endif %}
-    {% else %}
-    <p class="duel-result">아직 투표가 시작되지 않았습니다.</p>
+        {# content는 저장할 때 bleach로 위험한 태그를 걸러낸 HTML입니다 (boards/forms.py) #}
+        <div class="post-detail-content duel-source-content">{{ source_post.content|safe }}</div>
+    </section>
     {% endif %}
+
+    {# ---------- 투표판: 양쪽에 닉네임으로 크게 ---------- #}
+    <section class="duel-board" aria-label="일기토 투표 현황">
+        <div class="duel-board-sides">
+            <div class="duel-board-side party-{{ duel.challenger.party|default:'conservative' }}{% if duel.winner_id == duel.challenger_id %} is-winner{% endif %}">
+                <span class="duel-board-role">도전자</span>
+                {% include "partials/party_badge.html" with member=duel.challenger %}
+                <strong class="duel-board-nick">{{ duel.challenger.nickname }}</strong>
+                <span class="duel-board-meta"><span class="rank-chip">{{ duel.challenger.rank_name }}</span>{% if duel.challenger.duel_record %} <span class="record-chip">{{ duel.challenger.duel_record }}</span>{% endif %}</span>
+                <span class="duel-board-votes"><b>{{ duel.challenger_votes }}</b>표 · {{ duel.challenger_percent }}%</span>
+                {% if can_vote %}
+                <form action="{% url 'duels:duel_vote' duel.pk %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" name="side" value="challenger" class="btn duel-vote-btn">{{ duel.challenger.nickname }}에게 투표</button>
+                </form>
+                {% elif user_vote.side == 'challenger' %}
+                <span class="duel-board-myvote">✔ 내가 투표함</span>
+                {% endif %}
+            </div>
+
+            <span class="duel-board-vs" aria-hidden="true">VS</span>
+
+            <div class="duel-board-side party-{{ duel.opponent.party|default:'democrat' }}{% if duel.winner_id == duel.opponent_id %} is-winner{% endif %}">
+                <span class="duel-board-role">{% if source_post %}원본글 작성자{% else %}상대{% endif %}</span>
+                {% include "partials/party_badge.html" with member=duel.opponent %}
+                <strong class="duel-board-nick">{{ duel.opponent.nickname }}</strong>
+                <span class="duel-board-meta"><span class="rank-chip">{{ duel.opponent.rank_name }}</span>{% if duel.opponent.duel_record %} <span class="record-chip">{{ duel.opponent.duel_record }}</span>{% endif %}</span>
+                <span class="duel-board-votes"><b>{{ duel.opponent_votes }}</b>표 · {{ duel.opponent_percent }}%</span>
+                {% if can_vote %}
+                <form action="{% url 'duels:duel_vote' duel.pk %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" name="side" value="opponent" class="btn duel-vote-btn">{{ duel.opponent.nickname }}에게 투표</button>
+                </form>
+                {% elif user_vote.side == 'opponent' %}
+                <span class="duel-board-myvote">✔ 내가 투표함</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="duel-widget-bar">
+            <div class="duel-widget-bar-fill party-{{ duel.challenger.party|default:'conservative' }}" style="width: {{ duel.challenger_percent }}%;"></div>
+            <div class="duel-widget-bar-fill party-{{ duel.opponent.party|default:'democrat' }}" style="width: {{ duel.opponent_percent }}%;"></div>
+        </div>
+
+        {% if duel.status == 'finished' %}
+        <p class="duel-result">
+            {% if duel.winner %}🏆 {{ duel.winner.nickname }} 승리{% else %}무승부로 종료되었습니다{% endif %}
+        </p>
+        {% elif duel.is_voting_open %}
+        <p class="duel-widget-countdown" data-duel-countdown="{{ duel.seconds_remaining }}">
+            투표 마감까지 <strong>{{ duel.seconds_remaining }}초</strong>
+        </p>
+            {% if not request.user.is_authenticated %}
+            <p class="comment-login-notice duel-board-notice"><a href="{% url 'login' %}">로그인</a> 후 투표할 수 있습니다.</p>
+            {% elif is_participant %}
+            <p class="comment-login-notice duel-board-notice">본인이 출전한 일기토에는 투표할 수 없습니다.</p>
+            {% endif %}
+        {% else %}
+        <p class="duel-result">아직 투표가 시작되지 않았습니다.</p>
+        {% endif %}
+    </section>
+
+    {# ---------- 당사자 전용 토론 ---------- #}
+    <section class="post-comments duel-debate" aria-labelledby="debate-heading">
+        <h2 id="debate-heading" class="post-comments-heading">끝장토론 {{ duel_comments|length }}</h2>
+
+        {% if can_comment %}
+        <form action="{% url 'duels:duel_comment_add' duel.pk %}" method="post" class="comment-form">
+            {% csrf_token %}
+            <textarea name="content" rows="3" maxlength="{{ comment_max_length }}" required placeholder="상대의 주장에 반박하거나 내 주장을 펼쳐보세요"></textarea>
+            <button type="submit" class="btn btn-primary">등록</button>
+        </form>
+        {% elif duel.status == 'active' %}
+        <p class="comment-login-notice">토론 글은 <strong>{{ duel.challenger.nickname }}</strong>(신청자)님과 <strong>{{ duel.opponent.nickname }}</strong>({% if source_post %}원본글 작성자{% else %}상대{% endif %})님만 쓸 수 있습니다. 다른 회원은 위에서 투표로 참여해주세요.</p>
+        {% else %}
+        <p class="comment-login-notice">종료된 일기토입니다.</p>
+        {% endif %}
+
+        {% if duel_comments %}
+        <ul class="comment-list">
+            {% for comment in duel_comments %}
+            <li class="comment-item duel-debate-item party-{{ comment.author.party|default:'none' }}">
+                <div class="comment-item-head">
+                    <span class="author-badge">
+                        {% include "partials/party_badge.html" with member=comment.author %}
+                        {{ comment.author.nickname }}
+                        <span class="duel-debate-role">{% if comment.author_id == duel.challenger_id %}신청자{% else %}{% if source_post %}원본글 작성자{% else %}상대{% endif %}{% endif %}</span>
+                    </span>
+                    <span class="comment-item-date">{{ comment.created_at|date:"Y.m.d H:i" }}</span>
+                </div>
+                <p class="comment-item-content">{{ comment.content|linebreaksbr }}</p>
+                {% if comment.author_id == request.user.id or request.user.is_staff %}
+                <form action="{% url 'duels:duel_comment_delete' duel.pk comment.pk %}" method="post" class="comment-item-delete">
+                    {% csrf_token %}
+                    <button type="submit" class="link-btn">삭제</button>
+                </form>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="comment-empty">아직 토론 글이 없습니다.</p>
+        {% endif %}
+    </section>
 
     <div class="post-detail-actions">
         <a href="{% url 'duels:duel_list' %}" class="btn btn-ghost">목록</a>

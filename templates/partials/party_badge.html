@@ -1,0 +1,5 @@
+{% comment %}
+진영 뱃지 (2026-09-24). 사용법: {% include "partials/party_badge.html" with member=어떤회원 %}
+보수 = 빨강, 진보 = 파랑. 진영이 없는 회원(관리자 등)은 아무것도 표시하지 않습니다.
+{% endcomment %}
+{% if member.party %}<span class="party-badge party-badge-{{ member.party }}" title="{{ member.get_party_display }} 진영"><svg class="party-badge-icon" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1 10.5 2.8v3.1c0 2.6-1.9 4.4-4.5 5.1C3.4 10.3 1.5 8.5 1.5 5.9V2.8Z" fill="currentColor"/></svg><span class="party-badge-text">{{ member.get_party_display }}</span></span>{% endif %}

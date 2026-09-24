@@ -150,6 +150,7 @@ a { color: inherit; }
 .top-link:hover,
 .top-link:focus { color: var(--color-text); }
 .top-logout-form { margin: 0; display: inline; }
+.top-link-icon { display: none; width: 20px; height: 20px; }
 .top-link-button {
     background: none;
     border: none;
@@ -158,14 +159,27 @@ a { color: inherit; }
     font-size: 0.85rem;
     cursor: pointer;
 }
-/* 아주 좁은 폰 화면에서는 구분선을 숨겨 공간 확보 */
-@media (max-width: 400px) {
-    .top-inner { gap: 6px; padding-left: 12px; padding-right: 8px; }
-    .top-actions { gap: 8px; }
+/* 폰 화면(햄버거 메뉴가 보이는 767px 이하): 상단을 항상 한 줄로 유지.
+   공간이 모자라면 줄바꿈 대신 닉네임이 "…"으로 줄어듭니다. (2026-09-24) */
+@media (max-width: 767px) {
+    .top-inner { flex-wrap: nowrap; gap: 6px; padding-left: 12px; padding-right: 8px; }
+    .logo { flex-shrink: 0; }
+    .logo-image { height: 28px; }
+    .top-actions { flex: 1 1 auto; min-width: 0; justify-content: flex-end; gap: 8px; }
     .top-sep { display: none; }
-    .top-nickname { max-width: 5em; }
+    .top-user { flex: 0 1 auto; min-width: 0; gap: 3px; }
+    .top-nickname { flex: 0 1 auto; min-width: 0; max-width: 8em; }
+    /* 마이페이지/로그아웃: 폰에서는 아이콘만 (글자는 title과 화면낭독기용으로 유지) */
+    .top-link { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; min-height: 36px; }
+    .top-link-icon { display: block; }
+    .top-link-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .top-user .rank-chip, .top-user .party-badge, .top-link, .top-logout-form, .gnb-toggle { flex-shrink: 0; }
     .top-nickname, .top-link, .top-link-button { font-size: 0.78rem; }
     .gnb-toggle { width: 40px; }
+    /* 폰에서는 상단 진영 뱃지를 방패 아이콘만 (보수=빨강/진보=파랑) */
+    .top-user .party-badge { padding: 3px 4px; }
+    .top-user .party-badge-text { display: none; }  /* 글자는 title 속성(마우스 올리면 표시)으로 남아 있음 */
+    .top-user .party-badge-icon { width: 12px; height: 12px; }
 }
 
 .btn {
@@ -1450,3 +1464,192 @@ a { color: inherit; }
     margin-top: var(--space-2);
 }
 .mypage-links .btn { flex: 1; }
+
+
+/* ---------------- 진영 뱃지 (2026-09-24): 보수=빨강, 진보=파랑, 방패 아이콘 ---------------- */
+.party-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px 2px 5px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: #fff;
+    white-space: nowrap;
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+.party-badge-icon { width: 11px; height: 11px; flex-shrink: 0; opacity: 0.9; }
+.party-badge-conservative { background: linear-gradient(180deg, #ff4058, var(--color-red-dark)); }
+.party-badge-democrat { background: linear-gradient(180deg, #4b86ff, var(--color-blue-dark)); }
+
+/* ---------------- 글 쓰기/삭제 포인트 안내 (2026-09-24) ---------------- */
+.point-hint {
+    margin: 0 0 var(--space-3);
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+.point-hint strong { color: var(--color-gold); }
+.point-warning {
+    margin: 0 0 var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border-radius: 8px;
+    border: 1px solid rgba(239, 35, 60, 0.45);
+    background: rgba(239, 35, 60, 0.1);
+    color: var(--color-text);
+    font-size: 0.85rem;
+}
+.point-warning strong { color: var(--color-red); }
+
+
+/* ---------------- 1:1 일기토 신청 + 상세 개편 (2026-09-24) ---------------- */
+/* 도전자/상대 순서가 아니라 각자의 진영 색을 따르도록 (민주 회원이 도전자일 수도 있으므로) */
+.duel-side.party-conservative .duel-side-percent { color: var(--color-red); }
+.duel-side.party-democrat .duel-side-percent { color: var(--color-blue); }
+.duel-widget-bar-fill.party-conservative { background: var(--color-red); }
+.duel-widget-bar-fill.party-democrat { background: var(--color-blue); }
+
+/* 게시글 상세의 신청 박스 */
+.duel-challenge-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-3);
+    margin: var(--space-3) 0;
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    border: 1px solid rgba(139, 92, 246, 0.45);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(139, 92, 246, 0.04));
+}
+.duel-challenge-text {
+    margin: 0;
+    flex: 1 1 260px;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--color-text-muted);
+}
+.duel-challenge-text strong { color: var(--color-text); }
+.duel-challenge-btn {
+    background: var(--color-purple);
+    color: #fff;
+}
+.duel-challenge-btn:hover { background: #7c4ef0; }
+
+/* 상태 표시 */
+.duel-status { font-weight: 700; }
+.duel-status-active { color: var(--color-purple); }
+
+/* 원본글 */
+.duel-source {
+    margin-bottom: var(--space-4);
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-card);
+}
+.duel-source-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+}
+.duel-source-label {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+}
+.duel-source-link { font-size: 0.78rem; color: var(--color-blue); text-decoration: none; white-space: nowrap; }
+.duel-source-title { margin: 0 0 var(--space-1); font-size: 1.05rem; font-weight: 700; }
+.duel-source-author {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
+    margin: 0 0 var(--space-3);
+    font-size: 0.82rem;
+}
+.duel-source-date { color: var(--color-text-muted); }
+.duel-source-content { max-height: 480px; overflow-y: auto; }
+
+/* 투표판: 양쪽 닉네임 크게 */
+.duel-board {
+    margin-bottom: var(--space-4);
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    background: var(--color-bg-card);
+}
+.duel-board-sides {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: stretch;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+}
+.duel-board-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: var(--space-3) var(--space-2);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elevated);
+    text-align: center;
+}
+.duel-board-side.party-conservative { border-color: rgba(239, 35, 60, 0.5); background: linear-gradient(180deg, rgba(239, 35, 60, 0.12), transparent 70%), var(--color-bg-elevated); }
+.duel-board-side.party-democrat { border-color: rgba(47, 111, 237, 0.55); background: linear-gradient(180deg, rgba(47, 111, 237, 0.14), transparent 70%), var(--color-bg-elevated); }
+.duel-board-side.is-winner { box-shadow: 0 0 0 2px var(--color-gold); }
+.duel-board-role { font-size: 0.7rem; color: var(--color-text-muted); }
+.duel-board-nick {
+    max-width: 100%;
+    font-size: 1.25rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+.duel-board-meta { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.duel-board-votes { font-size: 0.85rem; color: var(--color-text-muted); }
+.duel-board-votes b { font-size: 1.5rem; color: var(--color-text); }
+.party-conservative .duel-board-votes b { color: var(--color-red); }
+.party-democrat .duel-board-votes b { color: var(--color-blue); }
+.duel-board-vs {
+    align-self: center;
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: var(--color-purple);
+}
+.duel-vote-btn {
+    margin-top: 4px;
+    min-height: 40px;
+    max-width: 100%;
+    white-space: normal;
+    color: #fff;
+}
+.party-conservative .duel-vote-btn { background: var(--color-red); }
+.party-conservative .duel-vote-btn:hover { background: var(--color-red-dark); }
+.party-democrat .duel-vote-btn { background: var(--color-blue); }
+.party-democrat .duel-vote-btn:hover { background: var(--color-blue-dark); }
+.duel-board-myvote { font-size: 0.78rem; font-weight: 700; color: var(--color-gold); }
+.duel-board-notice { text-align: center; margin: 0; }
+.duel-result { text-align: center; font-weight: 700; margin: 0; }
+
+/* 당사자 토론: 진영 색 왼쪽 선으로 누가 쓴 글인지 한눈에 */
+.duel-debate-item { padding-left: var(--space-2); border-left: 3px solid var(--color-border); }
+.duel-debate-item.party-conservative { border-left-color: var(--color-red); }
+.duel-debate-item.party-democrat { border-left-color: var(--color-blue); }
+.duel-debate-role { font-size: 0.7rem; color: var(--color-text-muted); font-weight: 400; }
+
+@media (max-width: 480px) {
+    .duel-board-sides { gap: 6px; }
+    .duel-board-side { padding: var(--space-2) 6px; }
+    .duel-board-nick { font-size: 1.05rem; }
+    .duel-board-vs { font-size: 0.75rem; }
+    .duel-vote-btn { padding: 0 10px; font-size: 0.78rem; }
+}

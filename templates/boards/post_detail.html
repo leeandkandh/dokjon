@@ -45,6 +45,22 @@
         </form>
     </div>
 
+    {# 2026-09-24: 상대 진영 글에 1:1 일기토 신청 #}
+    {% if active_duel %}
+    <div class="duel-challenge-box">
+        <p class="duel-challenge-text">⚡ 이 글을 걸고 <strong>{{ active_duel.challenger.nickname }}</strong> vs <strong>{{ active_duel.opponent.nickname }}</strong> 일기토가 진행중입니다.</p>
+        <a href="{% url 'duels:duel_detail' active_duel.pk %}" class="btn duel-challenge-btn">일기토 보러가기</a>
+    </div>
+    {% elif can_challenge %}
+    <div class="duel-challenge-box">
+        <p class="duel-challenge-text">이 주장에 동의할 수 없다면? <strong>{{ post.author.nickname }}</strong>님에게 1:1 끝장토론을 신청하세요. 신청 즉시 일기토 게시판에 대진이 열리고 3일간 회원 투표를 받습니다.</p>
+        <form action="{% url 'duels:duel_challenge' post.pk %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn duel-challenge-btn">⚡ 1:1 일기토 신청</button>
+        </form>
+    </div>
+    {% endif %}
+
     <div class="post-detail-actions">
         <a href="{% url 'boards:post_list' board.slug %}" class="btn btn-ghost">목록</a>
         {% if can_edit %}

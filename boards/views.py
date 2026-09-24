@@ -2,13 +2,15 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
-from django.db.models import Count, F
+from django.db.models import Count, F, Value
+from django.db.models.functions import Greatest
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 
 from accounts.models import PARTY_CHOICES, User
+from duels.views import active_duel_for_post, can_challenge_post
 from menus.models import Menu
 
 from .forms import CommentForm, PostForm
@@ -18,6 +20,7 @@ from .models import (
     MAX_UPLOAD_IMAGE_SIZE,
     POINTS_COMMENT_WRITE,
     POINTS_LIKE_RECEIVED,
+    POINTS_POST_DELETE,
     POINTS_POST_WRITE,
     Comment,
     Post,
@@ -114,9 +117,16 @@ def post_detail(request, slug, pk):
         pk=pk, board=board,
     )
 
-    # update()로 DB에서 바로 +1 (동시에 여러 명이 봐도 안전) 후, 화면에 보여줄 값만 다시 읽어옵니다.
-    Post.objects.filter(pk=post.pk).update(view_count=F('view_count') + 1)
-    post.view_count += 1
+    # 조회수는 "같은 브라우저(세션)에서 처음 볼 때 한 번만" 올립니다. (2026-09-24 수정)
+    # 전에는 상세 화면이 열릴 때마다 +1이라서, 추천/댓글 등록 후 이 화면으로 다시
+    # 돌아올 때나 새로고침할 때도 조회수가 같이 올라가는 문제가 있었습니다.
+    viewed = request.session.get('viewed_posts', [])
+    if post.pk not in viewed:
+        # update()로 DB에서 바로 +1 (동시에 여러 명이 봐도 안전) 후, 화면에 보여줄 값만 다시 맞춥니다.
+        Post.objects.filter(pk=post.pk).update(view_count=F('view_count') + 1)
+        post.view_count += 1
+        viewed.append(post.pk)
+        request.session['viewed_posts'] = viewed[-500:]  # 세션이 너무 커지지 않게 최근 500개만 기억
 
     can_edit = request.user.is_authenticated and (post.author_id == request.user.id or request.user.is_staff)
 
@@ -136,6 +146,9 @@ def post_detail(request, slug, pk):
         'like_count': like_count,
         'user_has_liked': user_has_liked,
         'can_write': can_write_in_board(request.user, board),
+        # 2026-09-24: 1:1 일기토 신청 버튼 / 이 글에 진행중인 일기토
+        'can_challenge': can_challenge_post(request.user, post),
+        'active_duel': active_duel_for_post(post) if board.slug in PARTY_BOARD_SLUGS else None,
         'party_only_message': party_only_message(board) if board.slug in PARTY_BOARD_SLUGS else '',
         'page_title': f'{post.title} - {board.name} - 독존',
         # content는 이제 HTML이라, meta description용으로는 태그를 뗀 순수 텍스트만 사용
@@ -192,7 +205,7 @@ def post_create(request, slug):
             # 9단계: 글쓰기 포인트 지급
             User.objects.filter(pk=post.author_id).update(points=F('points') + POINTS_POST_WRITE)
 
-            messages.success(request, '글이 등록되었습니다.')
+            messages.success(request, f'글이 등록되었습니다. (포인트 +{POINTS_POST_WRITE}점)')
             return redirect('boards:post_detail', slug=board.slug, pk=post.pk)
     else:
         form = PostForm()
@@ -201,6 +214,7 @@ def post_create(request, slug):
         'board': board,
         'form': form,
         'max_image_count': MAX_UPLOAD_IMAGE_COUNT,
+        'points_post_write': POINTS_POST_WRITE,
         'page_title': f'글쓰기 - {board.name} - 독존',
     }
     return render(request, 'boards/post_form.html', context)
@@ -253,13 +267,19 @@ def post_delete(request, slug, pk):
         return redirect('boards:post_detail', slug=board.slug, pk=post.pk)
 
     if request.method == 'POST':
+        author_id = post.author_id
         post.delete()
-        messages.success(request, '글이 삭제되었습니다.')
+        # 2026-09-24: 글 삭제 시 글쓴이 포인트 -3 (관리자가 지워도 글쓴이에게서 차감, 0 미만으로는 안 내려감)
+        User.objects.filter(pk=author_id).update(
+            points=Greatest(F('points') - POINTS_POST_DELETE, Value(0))
+        )
+        messages.success(request, f'글이 삭제되었습니다. (포인트 -{POINTS_POST_DELETE}점)')
         return redirect('boards:post_list', slug=board.slug)
 
     context = {
         'board': board,
         'post': post,
+        'points_post_delete': POINTS_POST_DELETE,
         'page_title': f'글삭제 확인 - {board.name} - 독존',
     }
     return render(request, 'boards/post_confirm_delete.html', context)

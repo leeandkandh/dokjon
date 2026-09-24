@@ -6,6 +6,7 @@
 <section class="post-form-page">
     <h1>글 삭제</h1>
     <p>"{{ post.title }}" 글을 정말 삭제하시겠습니까? 삭제하면 되돌릴 수 없습니다.</p>
+    <p class="point-warning" role="alert">⚠ 글을 삭제하면 글쓴이의 포인트가 <strong>{{ points_post_delete }}점 차감</strong>됩니다.</p>
     <form method="post" class="post-form">
         {% csrf_token %}
         <div class="post-form-actions">

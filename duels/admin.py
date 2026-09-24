@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Duel, DuelVote
+from .models import Duel, DuelComment, DuelVote
 
 
 class DuelVoteInline(admin.TabularInline):
@@ -8,6 +8,12 @@ class DuelVoteInline(admin.TabularInline):
     extra = 0
     readonly_fields = ('voter', 'side', 'voted_at')
     can_delete = False
+
+
+class DuelCommentInline(admin.TabularInline):
+    model = DuelComment
+    extra = 0
+    readonly_fields = ('author', 'created_at')
 
 
 @admin.register(Duel)
@@ -21,4 +27,5 @@ class DuelAdmin(admin.ModelAdmin):
     search_fields = ('topic', 'challenger__nickname', 'opponent__nickname')
     autocomplete_fields = ('challenger', 'opponent', 'winner')
     date_hierarchy = 'start_at'
-    inlines = [DuelVoteInline]
+    raw_id_fields = ('source_post',)
+    inlines = [DuelVoteInline, DuelCommentInline]
