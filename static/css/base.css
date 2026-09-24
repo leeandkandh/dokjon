@@ -120,16 +120,52 @@ a { color: inherit; }
     gap: var(--space-2);
 }
 
-.top-nickname,
-.top-grade {
+/* 2026-09-24: 로그인 후 [등급] 닉네임 | 마이페이지 | 로그아웃 */
+.top-user {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+}
+.top-nickname {
     font-size: 0.85rem;
-    color: var(--color-text-muted);
+    font-weight: 600;
+    color: var(--color-text);
+    max-width: 9em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.top-sep {
+    font-size: 0.75rem;
+    color: var(--color-border);
 }
 
 .top-link {
     font-size: 0.85rem;
     color: var(--color-text-muted);
     text-decoration: none;
+    white-space: nowrap;
+}
+.top-link:hover,
+.top-link:focus { color: var(--color-text); }
+.top-logout-form { margin: 0; display: inline; }
+.top-link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+/* 아주 좁은 폰 화면에서는 구분선을 숨겨 공간 확보 */
+@media (max-width: 400px) {
+    .top-inner { gap: 6px; padding-left: 12px; padding-right: 8px; }
+    .top-actions { gap: 8px; }
+    .top-sep { display: none; }
+    .top-nickname { max-width: 5em; }
+    .top-nickname, .top-link, .top-link-button { font-size: 0.78rem; }
+    .gnb-toggle { width: 40px; }
 }
 
 .btn {
@@ -604,6 +640,11 @@ a { color: inherit; }
 .checkbox-label input[type="radio"] {
     width: 18px;
     height: 18px;
+    /* .form-field input의 min-height(44px)가 체크박스/라디오에도 걸려서
+       글자와 한 줄로 안 맞던 문제 수정 (2026-09-24) */
+    min-height: 0;
+    margin: 0;
+    padding: 0;
     flex-shrink: 0;
 }
 
@@ -613,6 +654,9 @@ a { color: inherit; }
     gap: var(--space-3);
 }
 .gender-choices .checkbox-label {
+    /* .form-field label(display:block)이 덮어쓰던 것을 다시 flex로 (라디오+글자 세로 가운데 정렬) */
+    display: flex;
+    margin-bottom: 0;
     flex: 1;
     justify-content: center;
     border: 1px solid var(--color-border);
@@ -1346,3 +1390,63 @@ a { color: inherit; }
     .post-card-thumb { width: 88px; height: 88px; }
     .post-card-title { font-size: 1.05rem; }
 }
+
+
+/* ---------------- 마이페이지 / 내 정보 변경 (2026-09-24) ---------------- */
+.mypage-card { max-width: 520px; }
+.mypage-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+}
+.mypage-stat {
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: var(--space-2);
+    text-align: center;
+}
+.mypage-stat-label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    margin-bottom: 2px;
+}
+.mypage-stat-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+.mypage-next-rank {
+    margin: 0 0 var(--space-4);
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+.mypage-next-rank strong { color: var(--color-gold); }
+.mypage-section-title {
+    font-size: 0.95rem;
+    margin: var(--space-4) 0 var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+.mypage-section-title:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+/* 변경 불가 항목: 입력칸처럼 보이지만 흐리게 + 안내 */
+.form-field input[readonly] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.readonly-badge {
+    margin-left: var(--space-1);
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 0 6px;
+}
+.mypage-links {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+.mypage-links .btn { flex: 1; }

@@ -21,18 +21,20 @@ GENDER_CHOICES = [
 
 # 9단계(요구사항 19장 "회원등급 산정기준") 포인트 등급표.
 # (필요 포인트, 등급명) 튜플을 포인트가 낮은 순서로 나열합니다.
-# 정치 배틀 아레나 컨셉에 맞춰 "예비당원"에서 "대통령"까지 9단계로 구성했습니다.
+# 2026-09-24 변경: 무협 컨셉 10단계 "초심자"~"독존"으로 교체 (기존 예비당원~대통령 9단계 대체).
+# 등급명은 DB에 저장하지 않고 포인트로 그때그때 계산하므로 마이그레이션이 필요 없습니다.
 # 포인트를 얼마나 줄지는 boards/duels 앱의 POINTS_* 상수를 참고하세요.
 RANK_TIERS = [
-    (0, '예비당원'),
-    (30, '청년당원'),
-    (80, '지역위원장'),
-    (150, '초선의원'),
-    (300, '재선의원'),
-    (500, '원내대표'),
-    (800, '당대표'),
-    (1200, '국무총리'),
-    (2000, '대통령'),
+    (0, '초심자'),
+    (30, '수련자'),
+    (80, '무인'),
+    (150, '협객'),
+    (300, '검객'),
+    (500, '강호인'),
+    (800, '고수'),
+    (1200, '절대고수'),
+    (2000, '전설'),
+    (3000, '독존'),
 ]
 
 
@@ -92,7 +94,7 @@ class User(AbstractUser):
 
     @property
     def rank_name(self):
-        """현재 포인트에 해당하는 9단계 등급명 (예: '초선의원')."""
+        """현재 포인트에 해당하는 10단계 등급명 (예: '협객')."""
         name = RANK_TIERS[0][1]
         for threshold, tier_name in RANK_TIERS:
             if self.points >= threshold:
@@ -100,6 +102,14 @@ class User(AbstractUser):
             else:
                 break
         return name
+
+    @property
+    def next_rank(self):
+        """다음 등급 (등급명, 필요 포인트, 남은 포인트). 이미 최고 등급이면 None."""
+        for threshold, tier_name in RANK_TIERS:
+            if self.points < threshold:
+                return tier_name, threshold, threshold - self.points
+        return None
 
     @property
     def duel_record(self):

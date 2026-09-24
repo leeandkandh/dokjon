@@ -61,3 +61,37 @@ class SignUpForm(UserCreationForm):
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError('이미 사용 중인 이메일입니다.')
         return email
+
+
+class ProfileForm(forms.ModelForm):
+    """마이페이지 > 내 정보 변경 폼 (2026-09-24).
+
+    아이디/닉네임/진영은 변경 불가라서 폼 필드 자체에 넣지 않았습니다.
+    (화면에는 읽기 전용으로 보여주기만 하고, 누가 요청을 조작해서 값을 보내도
+    폼에 없는 필드라 저장되지 않습니다.)
+    """
+
+    birth_date = forms.DateField(
+        label='생년월일',
+        widget=forms.SelectDateWidget(
+            years=range(_CURRENT_YEAR - 100, _CURRENT_YEAR + 1),
+            empty_label=('년도', '월', '일'),
+        ),
+    )
+    gender = forms.ChoiceField(label='성별', choices=GENDER_CHOICES, widget=forms.RadioSelect)
+
+    class Meta:
+        model = User
+        fields = ['email', 'birth_date', 'gender']
+        labels = {'email': '이메일'}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].required = True
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        # 본인이 이미 쓰던 이메일은 그대로 저장 가능, 다른 회원이 쓰는 이메일만 막음
+        if User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('이미 사용 중인 이메일입니다.')
+        return email

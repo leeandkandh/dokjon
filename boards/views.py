@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 
-from accounts.models import User
+from accounts.models import PARTY_CHOICES, User
 from menus.models import Menu
 
 from .forms import CommentForm, PostForm
@@ -50,6 +50,26 @@ def _save_post_images(post, files):
     return skipped
 
 
+# 2026-09-24 요청: 진영 전용 게시판.
+# 게시판 slug가 진영 값(conservative/democrat)과 같으면, 그 진영으로 가입한 회원만
+# 글쓰기/댓글쓰기를 할 수 있습니다. (읽기와 추천은 누구나 가능, 관리자는 예외로 허용)
+PARTY_BOARD_SLUGS = {value for value, _label in PARTY_CHOICES}
+PARTY_LABELS = dict(PARTY_CHOICES)
+
+
+def can_write_in_board(user, board):
+    """user가 board에 글/댓글을 쓸 수 있는지 여부."""
+    if not user.is_authenticated:
+        return False
+    if board.slug not in PARTY_BOARD_SLUGS or user.is_staff:
+        return True
+    return user.party == board.slug
+
+
+def party_only_message(board):
+    return f'{board.name}에는 회원가입 때 [{PARTY_LABELS[board.slug]}] 진영을 선택한 회원만 글과 댓글을 쓸 수 있습니다.'
+
+
 def _get_board_or_404(slug):
     """slug에 해당하는, 실제로 게시판 역할을 하는(=하위 메뉴가 없는) Menu를 가져옵니다.
 
@@ -80,6 +100,7 @@ def post_list(request, slug):
     context = {
         'board': board,
         'page_obj': page_obj,
+        'can_write': can_write_in_board(request.user, board),
         'page_title': f'{board.name} 게시판 - 독존',
         'meta_description': f'독존 {board.name} 게시판의 최신 글 목록입니다.',
     }
@@ -114,6 +135,8 @@ def post_detail(request, slug, pk):
         'comment_form': CommentForm(),
         'like_count': like_count,
         'user_has_liked': user_has_liked,
+        'can_write': can_write_in_board(request.user, board),
+        'party_only_message': party_only_message(board) if board.slug in PARTY_BOARD_SLUGS else '',
         'page_title': f'{post.title} - {board.name} - 독존',
         # content는 이제 HTML이라, meta description용으로는 태그를 뗀 순수 텍스트만 사용
         'meta_description': strip_tags(post.content)[:100],
@@ -132,6 +155,8 @@ def upload_image(request, slug):
     본문 안에 <img> 태그로 바로 삽입합니다.
     """
     board = _get_board_or_404(slug)
+    if not can_write_in_board(request.user, board):
+        return JsonResponse({'error': party_only_message(board)}, status=403)
     f = request.FILES.get('image')
 
     if not f:
@@ -148,6 +173,9 @@ def upload_image(request, slug):
 @login_required
 def post_create(request, slug):
     board = _get_board_or_404(slug)
+    if not can_write_in_board(request.user, board):
+        messages.error(request, party_only_message(board))
+        return redirect('boards:post_list', slug=board.slug)
 
     if request.method == 'POST':
         form = PostForm(request.POST)
@@ -243,6 +271,10 @@ def comment_add(request, slug, pk):
     """댓글 작성. (9단계) 목록/상세의 댓글수 뱃지를 실데이터로 채우기 위한 기능입니다."""
     board = _get_board_or_404(slug)
     post = get_object_or_404(Post, pk=pk, board=board)
+
+    if not can_write_in_board(request.user, board):
+        messages.error(request, party_only_message(board))
+        return redirect('boards:post_detail', slug=board.slug, pk=post.pk)
 
     form = CommentForm(request.POST)
     if form.is_valid():

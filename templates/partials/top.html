@@ -12,11 +12,19 @@ TOP 영역: 로고(이미지) + 태그라인 + 회원 상태별 버튼
 
     <div class="top-actions">
         {% if request.user.is_authenticated %}
-            <span class="top-nickname">{{ request.user.username }}</span>
-            <span class="top-grade">일반회원</span>
-            <a href="#" class="top-link">마이페이지</a>
-            <a href="#" class="top-link">개인정보 수정</a>
-            <a href="#" class="top-link">로그아웃</a>
+            {# 2026-09-24: [등급] 닉네임 | 마이페이지 | 로그아웃 #}
+            <span class="top-user">
+                <span class="rank-chip">{{ request.user.rank_name }}</span>
+                <span class="top-nickname">{{ request.user.nickname|default:request.user.username }}</span>
+            </span>
+            <span class="top-sep" aria-hidden="true">|</span>
+            <a href="{% url 'accounts:mypage' %}" class="top-link">마이페이지</a>
+            <span class="top-sep" aria-hidden="true">|</span>
+            {# Django 5부터 로그아웃은 POST로만 가능해서 링크 대신 작은 폼 버튼을 씁니다 #}
+            <form action="{% url 'logout' %}" method="post" class="top-logout-form">
+                {% csrf_token %}
+                <button type="submit" class="top-link top-link-button">로그아웃</button>
+            </form>
         {% else %}
             <a href="{% url 'login' %}" class="btn btn-ghost">로그인</a>
             <a href="{% url 'accounts:signup' %}" class="btn btn-primary">회원가입</a>

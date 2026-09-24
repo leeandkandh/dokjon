@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}독존 마이페이지 - 내 정보 확인 및 변경{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+<section class="auth-card mypage-card">
+    <h1>마이페이지</h1>
+
+    {% with u=request.user %}
+    <div class="mypage-summary">
+        <div class="mypage-stat">
+            <span class="mypage-stat-label">등급</span>
+            <span class="rank-chip">{{ u.rank_name }}</span>
+        </div>
+        <div class="mypage-stat">
+            <span class="mypage-stat-label">포인트</span>
+            <span class="mypage-stat-value">{{ u.points }}</span>
+        </div>
+        <div class="mypage-stat">
+            <span class="mypage-stat-label">일기토 전적</span>
+            <span class="mypage-stat-value">{{ u.duel_record|default:"-" }}</span>
+        </div>
+    </div>
+    {% with nxt=u.next_rank %}
+    <p class="mypage-next-rank">
+        {% if nxt %}다음 등급 <strong>{{ nxt.0 }}</strong>까지 {{ nxt.2 }}포인트 남았습니다.
+        {% else %}최고 등급 <strong>독존</strong>에 도달했습니다.{% endif %}
+    </p>
+    {% endwith %}
+
+    <h2 class="mypage-section-title">내 정보 변경</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="form-field">
+            <label for="ro-username">아이디 <span class="readonly-badge">변경 불가</span></label>
+            <input type="text" id="ro-username" value="{{ u.username }}" readonly>
+        </div>
+        <div class="form-field">
+            <label for="ro-nickname">닉네임 <span class="readonly-badge">변경 불가</span></label>
+            <input type="text" id="ro-nickname" value="{{ u.nickname }}" readonly>
+        </div>
+        <div class="form-field">
+            <label for="ro-party">진영 <span class="readonly-badge">변경 불가</span></label>
+            <input type="text" id="ro-party" value="{{ u.get_party_display|default:'-' }}" readonly>
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.email.id_for_label }}">이메일</label>
+            {{ form.email }}
+            {% for error in form.email.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.birth_date.id_for_label }}">생년월일</label>
+            <div class="birth-date-selects">{{ form.birth_date }}</div>
+            {% for error in form.birth_date.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="form-field">
+            <span class="form-field-title">성별</span>
+            <div class="gender-choices">
+                {% for radio in form.gender %}
+                <label class="checkbox-label">{{ radio.tag }} <span>{{ radio.choice_label }}</span></label>
+                {% endfor %}
+            </div>
+            {% for error in form.gender.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">저장</button>
+    </form>
+
+    <h2 class="mypage-section-title">보안</h2>
+    <div class="mypage-links">
+        <a href="{% url 'accounts:password_change' %}" class="btn btn-ghost">비밀번호 변경</a>
+    </div>
+    {% endwith %}
+</section>
+</div>
+{% endblock %}
