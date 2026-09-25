@@ -2384,3 +2384,36 @@ a.hbar-label:hover { text-decoration: underline; }
     .hbar-row { grid-template-columns: minmax(0, 7em) 1fr auto; }
     .stat-tile-value { font-size: 1.4rem; }
 }
+
+
+/* ---------------- 추천/반대 (2026-09-25) ---------------- */
+.vote-bar { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.vote-bar form { margin: 0; }
+.dislike-btn.is-disliked {
+    background: rgba(148, 163, 184, 0.16);
+    border-color: #94a3b8;
+    color: #cbd5e1;
+}
+.comment-item { scroll-margin-top: 90px; }
+.comment-item-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-top: 6px; }
+.comment-item-foot .comment-item-delete { margin-top: 0; }
+.comment-vote { display: inline-flex; gap: 6px; margin: 0; }
+.comment-vote-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+.comment-vote-btn:hover:not(:disabled) { border-color: var(--color-text-muted); color: var(--color-text); }
+.comment-vote-btn:disabled { cursor: default; opacity: 0.7; }
+.comment-vote-btn.is-up { border-color: var(--color-red); color: #ff6b6b; background: rgba(239, 35, 60, 0.12); }
+.comment-vote-btn.is-down { border-color: #94a3b8; color: #cbd5e1; background: rgba(148, 163, 184, 0.14); }

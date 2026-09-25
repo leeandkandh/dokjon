@@ -17,6 +17,10 @@ POINTS_POST_WRITE = 2
 POINTS_POST_DELETE = 3
 POINTS_COMMENT_WRITE = 2
 POINTS_LIKE_RECEIVED = 1
+# 2026-09-25: 반대 받으면 -1 (0점 밑으로는 안 내려감), 댓글도 추천 +1 / 반대 -1
+POINTS_DISLIKE_RECEIVED = 1
+POINTS_COMMENT_LIKE_RECEIVED = 1
+POINTS_COMMENT_DISLIKE_RECEIVED = 1
 
 
 class Post(models.Model):
@@ -159,3 +163,55 @@ class PostLike(models.Model):
 
     def __str__(self):
         return f'{self.post.title} - {self.user.nickname} 추천'
+
+
+class PostDislike(models.Model):
+    """게시글 반대 (2026-09-25). 한 사람이 같은 글에 한 번만.
+    추천(PostLike)과 반대는 동시에 할 수 없습니다 (하나를 누르면 다른 하나는 자동 취소)."""
+
+    post = models.ForeignKey(Post, verbose_name='게시글', on_delete=models.CASCADE, related_name='dislikes')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='반대한 회원',
+        on_delete=models.CASCADE,
+        related_name='post_dislikes',
+    )
+    created_at = models.DateTimeField('반대일', auto_now_add=True)
+
+    class Meta:
+        verbose_name = '반대'
+        verbose_name_plural = '반대 관리'
+        constraints = [
+            models.UniqueConstraint(fields=['post', 'user'], name='unique_post_dislike_per_user'),
+        ]
+
+    def __str__(self):
+        return f'{self.post.title} - {self.user.nickname} 반대'
+
+
+class CommentVote(models.Model):
+    """댓글 추천(+1) / 반대(-1) (2026-09-25). 한 사람이 같은 댓글에 하나만."""
+
+    UP = 1
+    DOWN = -1
+    VALUE_CHOICES = [(UP, '추천'), (DOWN, '반대')]
+
+    comment = models.ForeignKey(Comment, verbose_name='댓글', on_delete=models.CASCADE, related_name='votes')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='회원',
+        on_delete=models.CASCADE,
+        related_name='comment_votes',
+    )
+    value = models.SmallIntegerField('추천/반대', choices=VALUE_CHOICES)
+    created_at = models.DateTimeField('일시', auto_now_add=True)
+
+    class Meta:
+        verbose_name = '댓글 추천/반대'
+        verbose_name_plural = '댓글 추천/반대 관리'
+        constraints = [
+            models.UniqueConstraint(fields=['comment', 'user'], name='unique_comment_vote_per_user'),
+        ]
+
+    def __str__(self):
+        return f'{self.comment} - {self.user.nickname} {self.get_value_display()}'

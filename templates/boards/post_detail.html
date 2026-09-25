@@ -27,6 +27,7 @@
             <span>조회 {{ post.view_count }}</span>
             <span>댓글 {{ comment_count }}</span>
             <span>추천 {{ like_count }}</span>
+            <span>반대 {{ dislike_count }}</span>
         </div>
     </header>
 
@@ -46,11 +47,18 @@
     {# 2026-09-25: 유튜브 링크가 있으면 그 아래에 영상 플레이어 (boards/youtube.py) #}
     <div class="post-detail-content">{{ post.content|youtube_embed }}</div>
 
-    <div class="post-detail-like">
+    {# 2026-09-25: 추천(화력) +1 / 반대 -1. 하나만 선택 가능, 다시 누르면 취소. 본인 글은 누를 수 없음 #}
+    <div class="post-detail-like vote-bar">
         <form action="{% url 'boards:like_toggle' board.slug post.pk %}" method="post">
             {% csrf_token %}
-            <button type="submit" class="like-btn {% if user_has_liked %}is-liked{% endif %}" {% if not request.user.is_authenticated %}disabled title="로그인 후 추천할 수 있습니다"{% endif %}>
+            <button type="submit" class="like-btn {% if user_has_liked %}is-liked{% endif %}" {% if not request.user.is_authenticated %}disabled title="로그인 후 추천할 수 있습니다"{% elif is_own_post %}disabled title="본인 글에는 추천할 수 없습니다"{% endif %} aria-pressed="{% if user_has_liked %}true{% else %}false{% endif %}">
                 <span aria-hidden="true">🔥</span> 추천(화력) {{ like_count }}
+            </button>
+        </form>
+        <form action="{% url 'boards:dislike_toggle' board.slug post.pk %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="like-btn dislike-btn {% if user_has_disliked %}is-disliked{% endif %}" {% if not request.user.is_authenticated %}disabled title="로그인 후 반대할 수 있습니다"{% elif is_own_post %}disabled title="본인 글에는 반대할 수 없습니다"{% endif %} aria-pressed="{% if user_has_disliked %}true{% else %}false{% endif %}">
+                <span aria-hidden="true">👎</span> 반대 {{ dislike_count }}
             </button>
         </form>
     </div>
@@ -96,7 +104,7 @@
         {% if comments %}
         <ul class="comment-list">
             {% for comment in comments %}
-            <li class="comment-item">
+            <li class="comment-item" id="comment-{{ comment.pk }}">
                 <div class="comment-item-head">
                     <span class="author-badge">
                         {# 2026-09-25: 댓글에도 진영 마크 + 성별·나이대 #}
@@ -108,12 +116,20 @@
                     <span class="comment-item-date">{{ comment.created_at|date:"Y.m.d H:i" }}</span>
                 </div>
                 <p class="comment-item-content">{{ comment.content }}</p>
-                {% if request.user.is_authenticated and comment.author_id == request.user.id or request.user.is_staff %}
-                <form action="{% url 'boards:comment_delete' board.slug post.pk comment.pk %}" method="post" class="comment-item-delete">
-                    {% csrf_token %}
-                    <button type="submit" class="link-btn">삭제</button>
-                </form>
-                {% endif %}
+                <div class="comment-item-foot">
+                    {# 2026-09-25: 댓글 추천 +1 / 반대 -1 #}
+                    <form action="{% url 'boards:comment_vote' board.slug post.pk comment.pk %}" method="post" class="comment-vote">
+                        {% csrf_token %}
+                                                <button type="submit" name="value" value="up" class="comment-vote-btn{% if comment.my_vote == 1 %} is-up{% endif %}" {% if not request.user.is_authenticated or comment.author_id == request.user.id %}disabled{% endif %} aria-label="추천 {{ comment.up_count }}" aria-pressed="{% if comment.my_vote == 1 %}true{% else %}false{% endif %}">👍 {{ comment.up_count }}</button>
+                        <button type="submit" name="value" value="down" class="comment-vote-btn{% if comment.my_vote == -1 %} is-down{% endif %}" {% if not request.user.is_authenticated or comment.author_id == request.user.id %}disabled{% endif %} aria-label="반대 {{ comment.down_count }}" aria-pressed="{% if comment.my_vote == -1 %}true{% else %}false{% endif %}">👎 {{ comment.down_count }}</button>
+                    </form>
+                    {% if request.user.is_authenticated and comment.author_id == request.user.id or request.user.is_staff %}
+                    <form action="{% url 'boards:comment_delete' board.slug post.pk comment.pk %}" method="post" class="comment-item-delete">
+                        {% csrf_token %}
+                        <button type="submit" class="link-btn">삭제</button>
+                    </form>
+                    {% endif %}
+                </div>
             </li>
             {% endfor %}
         </ul>

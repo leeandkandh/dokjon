@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
-from django.db.models import Count, F, Value
+from django.db.models import Count, F, Q, Value
 from django.db.models.functions import Greatest
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -24,11 +24,16 @@ from .models import (
     MAX_UPLOAD_IMAGE_COUNT,
     MAX_UPLOAD_IMAGE_SIZE,
     POINTS_COMMENT_WRITE,
+    POINTS_COMMENT_DISLIKE_RECEIVED,
+    POINTS_COMMENT_LIKE_RECEIVED,
+    POINTS_DISLIKE_RECEIVED,
     POINTS_LIKE_RECEIVED,
     POINTS_POST_DELETE,
     POINTS_POST_WRITE,
     Comment,
+    CommentVote,
     Post,
+    PostDislike,
     PostImage,
     PostLike,
 )
@@ -248,10 +253,24 @@ def post_detail(request, slug, pk):
 
     can_edit = request.user.is_authenticated and (post.author_id == request.user.id or request.user.is_staff)
 
-    comments = post.comments.select_related('author').all()
+    # 2026-09-25: 댓글마다 추천/반대 수와 내가 누른 것
+    comments = list(
+        post.comments.select_related('author').annotate(
+            up_count=Count('votes', filter=Q(votes__value=CommentVote.UP)),
+            down_count=Count('votes', filter=Q(votes__value=CommentVote.DOWN)),
+        )
+    )
+    if request.user.is_authenticated:
+        my_votes = dict(CommentVote.objects.filter(comment__post=post, user=request.user).values_list('comment_id', 'value'))
+        for c in comments:
+            c.my_vote = my_votes.get(c.pk, 0)
     like_count = post.likes.count()
+    dislike_count = post.dislikes.count()
     user_has_liked = (
         request.user.is_authenticated and post.likes.filter(user_id=request.user.id).exists()
+    )
+    user_has_disliked = (
+        request.user.is_authenticated and post.dislikes.filter(user_id=request.user.id).exists()
     )
 
     context = {
@@ -259,10 +278,13 @@ def post_detail(request, slug, pk):
         'post': post,
         'can_edit': can_edit,
         'comments': comments,
-        'comment_count': comments.count(),
+        'comment_count': len(comments),
         'comment_form': CommentForm(),
         'like_count': like_count,
         'user_has_liked': user_has_liked,
+        'dislike_count': dislike_count,
+        'user_has_disliked': user_has_disliked,
+        'is_own_post': request.user.is_authenticated and post.author_id == request.user.id,
         'can_write': can_write_in_board(request.user, board),
         'show_demographics': board.slug in PARTY_BOARD_SLUGS,
         # 2026-09-24: 1:1 일기토 신청 버튼 / 이 글에 진행중인 일기토
@@ -442,27 +464,108 @@ def comment_delete(request, slug, pk, comment_pk):
     return redirect('boards:post_detail', slug=board.slug, pk=post.pk)
 
 
-@login_required
-@require_POST
-def like_toggle(request, slug, pk):
-    """추천(화력) 토글. 이미 추천했으면 취소, 아니면 추천합니다.
-    글쓴이 본인이 추천을 누르는 것도 굳이 막지 않았습니다(요구사항에 별도 언급 없음).
+def _add_points(user_id, delta):
+    """포인트 증감. 0점 밑으로는 내려가지 않습니다."""
+    if delta >= 0:
+        User.objects.filter(pk=user_id).update(points=F('points') + delta)
+    else:
+        User.objects.filter(pk=user_id).update(points=Greatest(F('points') + delta, Value(0)))
+
+
+def _post_vote(request, slug, pk, kind):
+    """게시글 추천(화력)/반대 공통 처리 (2026-09-25).
+
+    - 추천: 글쓴이 +1, 반대: 글쓴이 -1
+    - 같은 버튼을 다시 누르면 취소(포인트도 되돌림)
+    - 추천과 반대는 동시에 못 함: 반대 상태에서 추천을 누르면 반대가 취소되고 추천으로 바뀜 (반대도 마찬가지)
+    - 본인 글에는 추천/반대 불가 (포인트 셀프 적립 방지)
     """
     board = _get_board_or_404(slug)
     post = get_object_or_404(Post, pk=pk, board=board)
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+    if post.author_id == request.user.id:
+        message = '본인 글에는 추천/반대를 할 수 없습니다.'
+        if is_ajax:
+            return JsonResponse({'error': message}, status=400)
+        messages.info(request, message)
+        return redirect('boards:post_detail', slug=board.slug, pk=post.pk)
 
     like = PostLike.objects.filter(post=post, user=request.user).first()
-    if like:
-        like.delete()
-        liked = False
+    dislike = PostDislike.objects.filter(post=post, user=request.user).first()
+
+    if kind == 'like':
+        if like:
+            like.delete()
+            _add_points(post.author_id, -POINTS_LIKE_RECEIVED)
+        else:
+            if dislike:
+                dislike.delete()
+                _add_points(post.author_id, POINTS_DISLIKE_RECEIVED)
+            PostLike.objects.create(post=post, user=request.user)
+            _add_points(post.author_id, POINTS_LIKE_RECEIVED)
     else:
-        PostLike.objects.create(post=post, user=request.user)
-        User.objects.filter(pk=post.author_id).update(points=F('points') + POINTS_LIKE_RECEIVED)
-        liked = True
+        if dislike:
+            dislike.delete()
+            _add_points(post.author_id, POINTS_DISLIKE_RECEIVED)
+        else:
+            if like:
+                like.delete()
+                _add_points(post.author_id, -POINTS_LIKE_RECEIVED)
+            PostDislike.objects.create(post=post, user=request.user)
+            _add_points(post.author_id, -POINTS_DISLIKE_RECEIVED)
 
-    like_count = post.likes.count()
-
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({'liked': liked, 'like_count': like_count})
-
+    if is_ajax:
+        return JsonResponse({
+            'liked': PostLike.objects.filter(post=post, user=request.user).exists(),
+            'disliked': PostDislike.objects.filter(post=post, user=request.user).exists(),
+            'like_count': post.likes.count(),
+            'dislike_count': post.dislikes.count(),
+        })
     return redirect('boards:post_detail', slug=board.slug, pk=post.pk)
+
+
+@login_required
+@require_POST
+def like_toggle(request, slug, pk):
+    """추천(화력) 토글. 글쓴이 +1 (2026-09-25: 반대와 함께 _post_vote로 통합)"""
+    return _post_vote(request, slug, pk, 'like')
+
+
+@login_required
+@require_POST
+def dislike_toggle(request, slug, pk):
+    """반대 토글. 글쓴이 -1 (2026-09-25)"""
+    return _post_vote(request, slug, pk, 'dislike')
+
+
+@login_required
+@require_POST
+def comment_vote(request, slug, pk, comment_pk):
+    """댓글 추천(+1)/반대(-1) 토글 (2026-09-25). POST value=up|down.
+    규칙은 게시글과 같습니다(다시 누르면 취소, 추천↔반대 전환, 본인 댓글 불가)."""
+    board = _get_board_or_404(slug)
+    post = get_object_or_404(Post, pk=pk, board=board)
+    comment = get_object_or_404(Comment, pk=comment_pk, post=post)
+    back = redirect(f"{reverse('boards:post_detail', args=[board.slug, post.pk])}#comment-{comment.pk}")
+
+    value = {'up': CommentVote.UP, 'down': CommentVote.DOWN}.get(request.POST.get('value'))
+    if value is None:
+        return back
+    if comment.author_id == request.user.id:
+        messages.info(request, '본인 댓글에는 추천/반대를 할 수 없습니다.')
+        return back
+
+    points_for = {CommentVote.UP: POINTS_COMMENT_LIKE_RECEIVED, CommentVote.DOWN: -POINTS_COMMENT_DISLIKE_RECEIVED}
+    vote = CommentVote.objects.filter(comment=comment, user=request.user).first()
+    if vote:
+        _add_points(comment.author_id, -points_for[vote.value])  # 기존 것 되돌리기
+        if vote.value == value:
+            vote.delete()  # 같은 버튼 다시 누름 = 취소
+            return back
+        vote.value = value
+        vote.save(update_fields=['value'])
+    else:
+        CommentVote.objects.create(comment=comment, user=request.user, value=value)
+    _add_points(comment.author_id, points_for[value])
+    return back

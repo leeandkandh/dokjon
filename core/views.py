@@ -11,7 +11,15 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from accounts.models import RANK_TIERS
-from boards.models import POINTS_COMMENT_WRITE, POINTS_LIKE_RECEIVED, POINTS_POST_DELETE, POINTS_POST_WRITE
+from boards.models import (
+    POINTS_COMMENT_DISLIKE_RECEIVED,
+    POINTS_COMMENT_LIKE_RECEIVED,
+    POINTS_COMMENT_WRITE,
+    POINTS_DISLIKE_RECEIVED,
+    POINTS_LIKE_RECEIVED,
+    POINTS_POST_DELETE,
+    POINTS_POST_WRITE,
+)
 from duels.models import DUEL_DURATION, POINTS_DUEL_LOSS, POINTS_DUEL_WIN
 from boards.models import Post
 from boards.views import HOT_POSTS_DAYS
@@ -147,6 +155,9 @@ def _points_context():
         'points_post_delete': POINTS_POST_DELETE,
         'points_comment_write': POINTS_COMMENT_WRITE,
         'points_like_received': POINTS_LIKE_RECEIVED,
+        'points_dislike_received': POINTS_DISLIKE_RECEIVED,
+        'points_comment_like_received': POINTS_COMMENT_LIKE_RECEIVED,
+        'points_comment_dislike_received': POINTS_COMMENT_DISLIKE_RECEIVED,
         'points_duel_win': POINTS_DUEL_WIN,
         'points_duel_loss': POINTS_DUEL_LOSS,
         'duel_days': DUEL_DURATION.days,
@@ -302,6 +313,7 @@ def robots_txt(request):
         'Disallow: /board/*/edit/',
         'Disallow: /board/*/delete/',
         'Disallow: /board/*/like/',
+        'Disallow: /board/*/dislike/',
         'Disallow: /board/*/comments/',
         'Disallow: /ilgito/challenge/',
         'Disallow: /ilgito/*/vote/',

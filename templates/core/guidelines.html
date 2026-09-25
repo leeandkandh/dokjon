@@ -37,7 +37,7 @@
         </table>
         </div>
         <ul>
-            <li>화력(🔥 추천)은 진영과 상관없이 회원 누구나 누를 수 있습니다. 한 글에 한 번만 누를 수 있고, 다시 누르면 취소됩니다.</li>
+            <li>글과 댓글에는 <strong>추천(🔥 화력)</strong>과 <strong>반대(👎)</strong>가 있고, 진영과 상관없이 회원 누구나 누를 수 있습니다. 한 글·댓글에 둘 중 하나만 고를 수 있고, 같은 버튼을 다시 누르면 취소(포인트도 원래대로)됩니다. 본인 글·댓글에는 누를 수 없습니다.</li>
             <li>각 게시판 맨 위의 <strong>화력 BEST 10</strong>은 최근 {{ hot_posts_days }}일 안에 쓴 글 중 화력이 높은 순서입니다. 메인 화면의 <strong>화력 TOP 5</strong>도 같은 기준입니다.</li>
             <li>조회수는 같은 사람이 같은 글을 여러 번 봐도 한 번만 올라갑니다.</li>
             <li>이미지는 글 하나에 최대 5장, 장당 5MB까지 올릴 수 있습니다(jpg, png, gif, webp).</li>
@@ -63,6 +63,9 @@
                 <tr><td>글쓰기 (모든 게시판)</td><td class="pt-plus">+{{ points_post_write }}</td></tr>
                 <tr><td>댓글 쓰기</td><td class="pt-plus">+{{ points_comment_write }}</td></tr>
                 <tr><td>내 글이 화력(추천)을 받을 때</td><td class="pt-plus">+{{ points_like_received }}</td></tr>
+                <tr><td>내 글이 반대를 받을 때</td><td class="pt-minus">−{{ points_dislike_received }}</td></tr>
+                <tr><td>내 댓글이 추천을 받을 때</td><td class="pt-plus">+{{ points_comment_like_received }}</td></tr>
+                <tr><td>내 댓글이 반대를 받을 때</td><td class="pt-minus">−{{ points_comment_dislike_received }}</td></tr>
                 <tr><td>1:1 일기토 승리</td><td class="pt-plus">+{{ points_duel_win }}</td></tr>
                 <tr><td>1:1 일기토 패배 (참가 보상)</td><td class="pt-plus">+{{ points_duel_loss }}</td></tr>
                 <tr><td>내 글 삭제 (본인이 지우거나 운영자가 지운 경우 모두)</td><td class="pt-minus">−{{ points_post_delete }}</td></tr>

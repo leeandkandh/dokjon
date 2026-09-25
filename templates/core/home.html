@@ -41,15 +41,8 @@
     <img class="hero-image" src="{% static 'images/20260922_main.png' %}" alt="독존 - 보수와 민주가 만나는 정치 토론 배틀 아레나">
 </section>
 
-{# 2026-09-25 SEO: 페이지의 대표 제목(h1)과 사이트 소개. 검색엔진이 "이 사이트가 무엇인지" 판단하는 핵심 문장입니다 #}
-<section class="site-intro" aria-labelledby="site-intro-title">
-    <h1 id="site-intro-title" class="site-intro-title">독존 <span class="site-intro-sub">보수 vs 진보, 대한민국 정치 토론 커뮤니티</span></h1>
-    <p class="site-intro-text">
-        보수와 진보가 정면으로 맞붙는 곳. 국민의힘을 지지하는 보수 회원은 <a href="{% url 'boards:post_list' 'conservative' %}">보수 아레나</a>에서,
-        더불어민주당을 지지하는 진보 회원은 <a href="{% url 'boards:post_list' 'democrat' %}">민주 아레나</a>에서 정치 이슈를 이야기하고,
-        상대 진영의 주장에는 <a href="{% url 'duels:duel_list' %}">1:1 일기토</a>로 끝장토론을 신청합니다. 진영 상관없는 이야기는 <a href="{% url 'boards:post_list' 'free' %}">자유 게시판</a>에서.
-    </p>
-</section>
+{# 2026-09-25 SEO: 페이지 대표 제목(h1). 사용자 요청으로 화면에는 안 보이게(sr-only) 하고 검색엔진·화면낭독기용으로만 남김 #}
+<h1 class="sr-only">독존 - 보수 vs 진보, 대한민국 정치 토론 커뮤니티</h1>
 
 {% comment %}
 바로가기(quick-menu) 카드 — 사용자 요청으로 화면에서 숨김 (2026-09-22)

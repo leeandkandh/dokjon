@@ -14,4 +14,7 @@ urlpatterns = [
     path('board/<slug:slug>/<int:pk>/comments/', views.comment_add, name='comment_add'),
     path('board/<slug:slug>/<int:pk>/comments/<int:comment_pk>/delete/', views.comment_delete, name='comment_delete'),
     path('board/<slug:slug>/<int:pk>/like/', views.like_toggle, name='like_toggle'),
+    # 2026-09-25: 반대 + 댓글 추천/반대
+    path('board/<slug:slug>/<int:pk>/dislike/', views.dislike_toggle, name='dislike_toggle'),
+    path('board/<slug:slug>/<int:pk>/comments/<int:comment_pk>/vote/', views.comment_vote, name='comment_vote'),
 ]
