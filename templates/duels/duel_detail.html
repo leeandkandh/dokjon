@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load board_extras %}
 
 {% block title %}{{ page_title }}{% endblock %}
 {% block meta_description %}{{ meta_description }}{% endblock %}
@@ -31,6 +32,7 @@
             {% include "partials/party_badge.html" with member=source_post.author %}
             <strong>{{ source_post.author.nickname }}</strong>
             <span class="rank-chip">{{ source_post.author.rank_name }}</span>
+            {% include "partials/author_demo.html" with member=source_post.author %}
             <span class="duel-source-date">{{ source_post.created_at|date:"Y.m.d H:i" }}</span>
         </p>
         {% if source_post.images.all %}
@@ -41,7 +43,7 @@
         </div>
         {% endif %}
         {# content는 저장할 때 bleach로 위험한 태그를 걸러낸 HTML입니다 (boards/forms.py) #}
-        <div class="post-detail-content duel-source-content">{{ source_post.content|safe }}</div>
+        <div class="post-detail-content duel-source-content">{{ source_post.content|youtube_embed }}</div>
     </section>
     {% endif %}
 
@@ -130,6 +132,7 @@
                     <span class="author-badge">
                         {% include "partials/party_badge.html" with member=comment.author %}
                         {{ comment.author.nickname }}
+                        {% include "partials/author_demo.html" with member=comment.author %}
                         <span class="duel-debate-role">{% if comment.author_id == duel.challenger_id %}신청자{% else %}{% if source_post %}원본글 작성자{% else %}상대{% endif %}{% endif %}</span>
                     </span>
                     <span class="comment-item-date">{{ comment.created_at|date:"Y.m.d H:i" }}</span>

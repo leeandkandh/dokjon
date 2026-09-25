@@ -18,6 +18,7 @@ from boards.views import HOT_POSTS_DAYS
 from duels.models import Duel
 from menus.models import Menu
 
+from .context_processors import DEFAULT_DESCRIPTION, DEFAULT_TITLE
 from .forms import InquiryForm
 from .models import Inquiry
 
@@ -96,8 +97,9 @@ def home(request):
     )
 
     context = {
-        'page_title': '독존 - 정치 토론 커뮤니티',
-        'meta_description': '독존은 보수와 민주 진영이 자유롭게 정치 토론을 나누는 정치 커뮤니티입니다.',
+        # 2026-09-25 SEO: 검색 결과 제목/설명 (core/context_processors.py의 기본 문구와 동일)
+        'page_title': DEFAULT_TITLE,
+        'meta_description': DEFAULT_DESCRIPTION,
         'conservative_posts': counted_posts.filter(board=conservative_board).order_by('-created_at')[:5] if conservative_board else [],
         'democrat_posts': counted_posts.filter(board=democrat_board).order_by('-created_at')[:5] if democrat_board else [],
         'fire_top_posts': fire_top_posts,
@@ -121,7 +123,7 @@ def home(request):
 
 def _policy_context(title, description):
     return {
-        'page_title': f'{title} - 독존',
+        'page_title': f'{title} | 독존',
         'meta_description': description,
         'effective_date': POLICY_EFFECTIVE_DATE,
         'contact_email': settings.CONTACT_EMAIL,
@@ -153,13 +155,13 @@ def _points_context():
 
 
 def guidelines(request):
-    context = _policy_context('커뮤니티 가이드라인', '독존 커뮤니티 가이드라인 - 게시판 이용 규칙, 포인트와 등급 안내.')
+    context = _policy_context('커뮤니티 가이드라인', '보수·진보 정치 토론 커뮤니티 독존의 이용 규칙 - 보수 아레나·민주 아레나 권한, 금지 행위, 포인트와 등급 안내.')
     context.update(_points_context())
     return render(request, 'core/guidelines.html', context)
 
 
 def duel_rules(request):
-    context = _policy_context('1:1 일기토 규칙', '독존 1:1 일기토(끝장토론) 신청, 토론, 투표, 판정 규칙.')
+    context = _policy_context('1:1 일기토 규칙', '보수 vs 진보 1:1 정치 끝장토론 "일기토"의 신청, 토론, 투표, 판정 규칙과 보상 안내.')
     context.update(_points_context())
     return render(request, 'core/duel_rules.html', context)
 
@@ -269,7 +271,7 @@ def ranks(request):
                 'percent': round((user.points - current_threshold) / span * 100) if span else 100,
             }
 
-    context = _policy_context('회원 등급', '독존 회원 등급표 - 초심자부터 독존까지 10단계 등급과 포인트 기준.')
+    context = _policy_context('회원 등급', '독존 정치 커뮤니티 회원 등급표 - 초심자부터 독존까지 10단계 등급과 포인트 쌓는 법, 등급별 회원 수.')
     context.update(_points_context())
     context.update({
         'tiers': list(reversed(tiers)),  # 화면에는 최고 등급(독존)이 맨 위
@@ -278,3 +280,34 @@ def ranks(request):
         'total_members': members.count(),
     })
     return render(request, 'core/ranks.html', context)
+
+
+def robots_txt(request):
+    """robots.txt (2026-09-25 SEO). 검색엔진에게 수집해도 되는 곳/안 되는 곳과 sitemap 위치를 알려줍니다."""
+    from django.http import HttpResponse
+
+    from .context_processors import site_base_url
+
+    lines = [
+        'User-agent: *',
+        'Allow: /',
+        # 로그인·회원·관리자·글쓰기/수정/삭제·API 주소는 검색에 나올 필요 없음
+        'Disallow: /admin/',
+        'Disallow: /accounts/',
+        'Disallow: /login/',
+        'Disallow: /logout/',
+        'Disallow: /contact/done/',
+        'Disallow: /board/*/write/',
+        'Disallow: /board/*/upload-image/',
+        'Disallow: /board/*/edit/',
+        'Disallow: /board/*/delete/',
+        'Disallow: /board/*/like/',
+        'Disallow: /board/*/comments/',
+        'Disallow: /ilgito/challenge/',
+        'Disallow: /ilgito/*/vote/',
+        'Disallow: /ilgito/*/comments/',
+        '',
+        f'Sitemap: {site_base_url(request)}/sitemap.xml',
+        '',
+    ]
+    return HttpResponse('\n'.join(lines), content_type='text/plain; charset=utf-8')

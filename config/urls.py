@@ -8,10 +8,18 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
+from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
+
+from core.sitemaps import SITEMAPS
+from core.views import robots_txt
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # 2026-09-25 SEO: 검색엔진용 sitemap.xml / robots.txt
+    path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS}, name='django.contrib.sitemaps.views.sitemap'),
+    path('robots.txt', robots_txt, name='robots_txt'),
 
     # 로그인/로그아웃은 Django가 기본 제공하는 뷰를 그대로 사용
     # (login 템플릿은 templates/registration/login.html)

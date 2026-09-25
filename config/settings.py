@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',  # 2026-09-25 SEO: /sitemap.xml
     # 독존 자체 앱
     'core',      # 공통 레이아웃/메인 페이지
     'accounts',  # 회원가입/로그인/회원 모델 (4단계에서 추가)
@@ -132,6 +133,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 # 5단계: GNB(주 메뉴)를 모든 템플릿에서 gnb_items로 바로 쓸 수 있게 함
                 'menus.context_processors.menu_context',
+                # 2026-09-25 SEO: 대표 주소(canonical), 검색엔진 소유확인 코드 등
+                'core.context_processors.seo',
             ],
         },
     },
@@ -164,6 +167,16 @@ AUTH_USER_MODEL = 'accounts.User'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'core:home'
 LOGOUT_REDIRECT_URL = 'core:home'
+
+
+# ---------------- SEO (2026-09-25) ----------------
+# 사이트 대표 주소. canonical 태그, sitemap.xml, 공유 미리보기(og:url/og:image)에 쓰입니다.
+# 도메인이 연결되면 서버 .env에 SITE_URL=https://www.dokjon.com 을 넣으세요.
+# 비워두면 접속한 주소(예: IP) 그대로 씁니다.
+SITE_URL = os.environ.get('SITE_URL', '').rstrip('/')
+# 구글 서치 콘솔 / 네이버 서치어드바이저 "HTML 태그" 소유확인 코드 (content="..." 안의 값만)
+GOOGLE_SITE_VERIFICATION = os.environ.get('GOOGLE_SITE_VERIFICATION', '')
+NAVER_SITE_VERIFICATION = os.environ.get('NAVER_SITE_VERIFICATION', '')
 
 
 # ---------------- 문의(광고/제휴, 고객센터) 메일 (2026-09-24) ----------------

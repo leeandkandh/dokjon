@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{# 2026-09-25 SEO: 검색 결과에 나올 필요 없는 페이지 #}
+{% block robots %}noindex, follow{% endblock %}
 
 {% block title %}로그인 - 독존{% endblock %}
 {% block meta_description %}독존 로그인 페이지입니다.{% endblock %}

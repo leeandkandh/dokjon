@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{# 2026-09-25 SEO: 검색 결과에 나올 필요 없는 페이지 #}
+{% block robots %}noindex, follow{% endblock %}
 
 {% block title %}{{ page_title }}{% endblock %}
 {% block meta_description %}독존 마이페이지 - 내 정보 확인 및 변경{% endblock %}

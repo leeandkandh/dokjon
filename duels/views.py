@@ -56,8 +56,8 @@ def duel_list(request):
     context = {
         'current_duel': current_duel,
         'page_obj': page_obj,
-        'page_title': '일기토 (1:1 끝장토론) - 독존',
-        'meta_description': '독존 보수 아레나 vs 민주 아레나, 1:1 끝장토론 대진표와 투표 결과입니다.',
+        'page_title': '1:1 일기토 - 보수 vs 진보 정치 끝장토론 | 독존',
+        'meta_description': '보수(국민의힘 지지)와 진보(더불어민주당 지지) 회원이 1:1로 맞붙는 독존 정치 끝장토론. 진행 중인 일기토 대진표와 회원 투표 결과를 확인하세요.',
     }
     return render(request, 'duels/duel_list.html', context)
 
@@ -84,8 +84,8 @@ def duel_detail(request, pk):
         'source_post': source_post,
         'duel_comments': duel.comments.select_related('author'),
         'comment_max_length': DUEL_COMMENT_MAX_LENGTH,
-        'page_title': f'{duel.topic} - 일기토 - 독존',
-        'meta_description': f'{duel.challenger.nickname} vs {duel.opponent.nickname}, {duel.topic} 일기토 투표 현황입니다.',
+        'page_title': f'{duel.topic} - {duel.challenger.nickname} vs {duel.opponent.nickname} 1:1 일기토 | 독존',
+        'meta_description': f'[1:1 일기토] {duel.challenger.nickname} vs {duel.opponent.nickname}: "{duel.topic}" 보수와 진보의 정치 끝장토론과 회원 투표 결과. 현재 {duel.challenger_votes}:{duel.opponent_votes}.',
     }
     return render(request, 'duels/duel_detail.html', context)
 

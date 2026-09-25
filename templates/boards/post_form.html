@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{# 2026-09-25 SEO: 검색 결과에 나올 필요 없는 페이지 #}
+{% block robots %}noindex, follow{% endblock %}
 {% load static %}
 
 {% block title %}{{ page_title }}{% endblock %}
@@ -16,6 +18,7 @@
 <section class="post-form-page">
     <h1>{{ board.name }} {% if post %}글수정{% else %}글쓰기{% endif %}</h1>
     {% if not post and points_post_write %}<p class="point-hint">글을 등록하면 포인트 <strong>+{{ points_post_write }}점</strong>이 쌓입니다.</p>{% endif %}
+    <p class="point-hint">▶ 유튜브 주소(youtube.com / youtu.be / 쇼츠)를 본문에 붙여넣으면 글을 볼 때 영상이 바로 재생됩니다.</p>
     {% comment %} enctype="multipart/form-data"가 없으면 파일이 전송되지 않습니다. {% endcomment %}
     <form method="post" novalidate class="post-form" enctype="multipart/form-data"
           data-image-upload-url="{% url 'boards:upload_image' board.slug %}">

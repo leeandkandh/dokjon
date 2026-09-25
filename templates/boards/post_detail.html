@@ -1,7 +1,15 @@
 {% extends "base.html" %}
+{% load board_extras %}
 
 {% block title %}{{ page_title }}{% endblock %}
 {% block meta_description %}{{ meta_description }}{% endblock %}
+{# 2026-09-25 SEO: 게시글은 "article" 형태로 공유 미리보기 #}
+{% block og_type %}article{% endblock %}
+{% block extra_meta %}
+<meta property="article:published_time" content="{{ post.created_at|date:'c' }}">
+<meta property="article:modified_time" content="{{ post.updated_at|date:'c' }}">
+<meta property="article:section" content="{{ board.name }}">
+{% endblock %}
 
 {% block content %}
 <article class="post-detail">
@@ -35,7 +43,8 @@
     그대로 렌더링합니다(|safe). linebreaks를 쓰면 에디터가 만든 <p> 태그와 겹쳐서
     줄바꿈이 이상해집니다.
     {% endcomment %}
-    <div class="post-detail-content">{{ post.content|safe }}</div>
+    {# 2026-09-25: 유튜브 링크가 있으면 그 아래에 영상 플레이어 (boards/youtube.py) #}
+    <div class="post-detail-content">{{ post.content|youtube_embed }}</div>
 
     <div class="post-detail-like">
         <form action="{% url 'boards:like_toggle' board.slug post.pk %}" method="post">
@@ -90,8 +99,11 @@
             <li class="comment-item">
                 <div class="comment-item-head">
                     <span class="author-badge">
+                        {# 2026-09-25: 댓글에도 진영 마크 + 성별·나이대 #}
+                        {% include "partials/party_badge.html" with member=comment.author %}
                         {{ comment.author.nickname }}
                         <span class="rank-chip">{{ comment.author.rank_name }}</span>
+                        {% include "partials/author_demo.html" with member=comment.author %}
                     </span>
                     <span class="comment-item-date">{{ comment.created_at|date:"Y.m.d H:i" }}</span>
                 </div>

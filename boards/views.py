@@ -8,11 +8,13 @@ from django.db.models import Count, F, Value
 from django.db.models.functions import Greatest
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 
 from accounts.models import PARTY_CHOICES, User
+from core.seo import absolute_url, breadcrumb, to_jsonld
 from duels.views import active_duel_for_post, can_challenge_post
 from menus.models import Menu
 
@@ -68,6 +70,27 @@ HOT_POSTS_COUNT = 10
 HOT_POSTS_DAYS = 7
 
 
+# 2026-09-25 SEO: 게시판별 검색 결과 제목/설명과 목록 위 소개 문구.
+# 사람들이 실제로 검색할 단어(보수, 진보, 국민의힘, 더불어민주당, 정치 토론)를 자연스럽게 넣었습니다.
+BOARD_SEO = {
+    'conservative': {
+        'title': '보수 아레나 - 보수·국민의힘 지지자 정치 토론 게시판 | 독존',
+        'description': '보수 성향 회원과 국민의힘 지지자가 정치 이슈, 정책, 선거에 대한 주장을 펼치는 독존 보수 정치 토론 게시판입니다. 진보 회원은 댓글과 1:1 일기토로 반론할 수 있습니다.',
+        'intro': '보수 성향·국민의힘 지지 회원이 글을 쓰는 보수 정치 토론 게시판입니다. 진보 회원도 댓글과 1:1 일기토로 반론할 수 있습니다.',
+    },
+    'democrat': {
+        'title': '민주 아레나 - 진보·더불어민주당 지지자 정치 토론 게시판 | 독존',
+        'description': '진보 성향 회원과 더불어민주당(민주당) 지지자가 정치 이슈, 정책, 선거에 대한 주장을 펼치는 독존 진보 정치 토론 게시판입니다. 보수 회원은 댓글과 1:1 일기토로 반론할 수 있습니다.',
+        'intro': '진보 성향·더불어민주당 지지 회원이 글을 쓰는 진보 정치 토론 게시판입니다. 보수 회원도 댓글과 1:1 일기토로 반론할 수 있습니다.',
+    },
+    'free': {
+        'title': '자유 게시판 - 진영 상관없는 정치·시사 자유토론 | 독존',
+        'description': '보수와 진보 진영 상관없이 누구나 정치, 시사, 선거, 일상 이야기를 자유롭게 나누는 독존 자유 게시판입니다.',
+        'intro': '보수·진보 진영 상관없이 누구나 정치와 시사, 일상 이야기를 나누는 자유 게시판입니다.',
+    },
+}
+
+
 def can_write_in_board(user, board):
     """user가 board에 "글"을 쓸 수 있는지 여부. (댓글은 로그인만 하면 누구나 가능)"""
     if not user.is_authenticated:
@@ -79,6 +102,72 @@ def can_write_in_board(user, board):
 
 def party_only_message(board):
     return f'{board.name}에는 회원가입 때 [{PARTY_LABELS[board.slug]}] 진영을 선택한 회원만 글을 쓸 수 있습니다. (댓글은 누구나 가능)'
+
+
+def _board_seo(board):
+    return BOARD_SEO.get(board.slug) or {
+        'title': f'{board.name} - 정치 토론 커뮤니티 | 독존',
+        'description': f'독존 {board.name} 게시판의 최신 글 목록입니다.',
+        'intro': '',
+    }
+
+
+def _post_description(post, board):
+    text = ' '.join(strip_tags(post.content).split())
+    if len(text) < 40:
+        text = f'{text} - {board.name}에 올라온 {post.author.nickname}님의 글. {_board_seo(board)["description"]}'.strip(' -')
+    return text[:150]
+
+
+def _post_structured_data(request, board, post, comments, like_count):
+    """게시글 상세의 구조화 데이터 (2026-09-25 SEO).
+
+    구글은 커뮤니티 게시글용 DiscussionForumPosting 형식을 공식 지원합니다.
+    제목·본문·작성자·작성일·댓글·추천수를 알려주면 검색 결과에 "토론/포럼" 형태로 더 잘 노출됩니다.
+    """
+    post_url = absolute_url(request, reverse('boards:post_detail', args=[board.slug, post.pk]))
+    comment_list = list(comments[:20])
+    posting = {
+        '@type': 'DiscussionForumPosting',
+        '@id': post_url,
+        'url': post_url,
+        'mainEntityOfPage': post_url,
+        'headline': post.title,
+        'text': ' '.join(strip_tags(post.content).split())[:1000],
+        'datePublished': post.created_at.isoformat(),
+        'dateModified': post.updated_at.isoformat(),
+        'inLanguage': 'ko-KR',
+        'author': {'@type': 'Person', 'name': post.author.nickname},
+        'isPartOf': {'@type': 'WebPage', 'name': board.name, 'url': absolute_url(request, reverse('boards:post_list', args=[board.slug]))},
+        'interactionStatistic': [
+            {'@type': 'InteractionCounter', 'interactionType': 'https://schema.org/LikeAction', 'userInteractionCount': like_count},
+            {'@type': 'InteractionCounter', 'interactionType': 'https://schema.org/CommentAction', 'userInteractionCount': len(comments)},
+            {'@type': 'InteractionCounter', 'interactionType': 'https://schema.org/ViewAction', 'userInteractionCount': post.view_count},
+        ],
+        'comment': [
+            {
+                '@type': 'Comment',
+                'text': c.content[:500],
+                'datePublished': c.created_at.isoformat(),
+                'author': {'@type': 'Person', 'name': c.author.nickname},
+            }
+            for c in comment_list
+        ],
+    }
+    image = absolute_url(request, post.thumbnail_url)
+    if image:
+        posting['image'] = image
+    return to_jsonld({
+        '@context': 'https://schema.org',
+        '@graph': [
+            posting,
+            breadcrumb(request, [
+                ('독존', '/'),
+                (board.name, reverse('boards:post_list', args=[board.slug])),
+                (post.title, reverse('boards:post_detail', args=[board.slug, post.pk])),
+            ]),
+        ],
+    })
 
 
 def _get_board_or_404(slug):
@@ -127,8 +216,14 @@ def post_list(request, slug):
         'hot_posts_days': HOT_POSTS_DAYS,
         'show_demographics': board.slug in PARTY_BOARD_SLUGS,
         'can_write': can_write_in_board(request.user, board),
-        'page_title': f'{board.name} 게시판 - 독존',
-        'meta_description': f'독존 {board.name} 게시판의 최신 글 목록입니다.',
+        # 2026-09-25 SEO: 게시판별 검색 제목/설명 (2페이지부터는 제목에 페이지 번호를 붙여 중복 제목 방지)
+        'page_title': _board_seo(board)['title'] + (f' ({page_obj.number}페이지)' if page_obj.number > 1 else ''),
+        'meta_description': _board_seo(board)['description'],
+        'board_intro': _board_seo(board)['intro'],
+        'structured_data_json': to_jsonld({
+            '@context': 'https://schema.org',
+            **breadcrumb(request, [('독존', '/'), (board.name, reverse('boards:post_list', args=[board.slug]))]),
+        }),
     }
     return render(request, 'boards/post_list.html', context)
 
@@ -173,9 +268,12 @@ def post_detail(request, slug, pk):
         # 2026-09-24: 1:1 일기토 신청 버튼 / 이 글에 진행중인 일기토
         'can_challenge': can_challenge_post(request.user, post),
         'active_duel': active_duel_for_post(post) if board.slug in PARTY_BOARD_SLUGS else None,
-        'page_title': f'{post.title} - {board.name} - 독존',
+        'page_title': f'{post.title} - {board.name} | 독존',
         # content는 이제 HTML이라, meta description용으로는 태그를 뗀 순수 텍스트만 사용
-        'meta_description': strip_tags(post.content)[:100],
+        # 2026-09-25 SEO: 공백 정리 + 150자 (구글 검색 결과에 보이는 길이), 본문이 짧으면 게시판 설명으로 보충
+        'meta_description': _post_description(post, board),
+        'og_image_url': absolute_url(request, post.thumbnail_url),
+        'structured_data_json': _post_structured_data(request, board, post, comments, like_count),
     }
     return render(request, 'boards/post_detail.html', context)
 

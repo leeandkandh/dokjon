@@ -71,13 +71,19 @@ class Post(models.Model):
 
         1순위: 아래에 첨부한 이미지(PostImage)가 있으면 그 중 첫 번째.
         2순위: 첨부는 없지만 본문 에디터 안에 드래그로 넣은 이미지가 있으면 그 중 첫 번째.
+        3순위: 본문에 유튜브 링크가 있으면 첫 번째 영상의 썸네일.
         둘 다 없으면 None (템플릿에서 썸네일 없이 렌더링).
         """
         attached = list(self.images.all())  # prefetch_related('images') 캐시를 그대로 사용
         if attached:
             return attached[0].image.url
         match = _FIRST_IMG_SRC_RE.search(self.content)
-        return match.group(1) if match else None
+        if match:
+            return match.group(1)
+        # 3순위(2026-09-25): 이미지는 없고 유튜브 링크가 있으면 그 영상의 썸네일
+        from .youtube import youtube_ids  # 순환 import 방지
+        ids = youtube_ids(self.content)
+        return f'https://i.ytimg.com/vi/{ids[0]}/hqdefault.jpg' if ids else None
 
 
 # 7단계(파일업로드) 규칙. "첨부파일 용량" 정식 기준은 아직 확정 전(요구사항 19장)이라
