@@ -96,6 +96,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sitemaps',  # 2026-09-25 SEO: /sitemap.xml
+    'django.contrib.humanize',  # 2026-09-25: 통계 숫자에 천 단위 쉼표(1,234)
     # 독존 자체 앱
     'core',      # 공통 레이아웃/메인 페이지
     'accounts',  # 회원가입/로그인/회원 모델 (4단계에서 추가)
@@ -116,6 +117,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 2026-09-25: 관리자 통계(/stats/)용 방문 기록 (IP 원문 저장 안 함, core/middleware.py)
+    'core.middleware.VisitTrackingMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

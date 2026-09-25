@@ -2278,3 +2278,109 @@ a { color: inherit; }
 .ranking-list-numbered .author-badge { flex-wrap: wrap; min-width: 0; }
 .dokjon-medal-meta .demo-chip { background: rgba(0, 0, 0, 0.35); }
 .comment-item-head .author-badge { flex-wrap: wrap; }
+
+/* ---------------- 관리자 통계 대시보드 (2026-09-25) ---------------- */
+.stats-page { padding: var(--space-3) 0 var(--space-5); }
+.stats-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+}
+.stats-header h1 { margin: 0; font-size: 1.5rem; }
+.stats-updated { margin: 0; font-size: 0.78rem; color: var(--color-text-muted); }
+.stats-updated a { color: var(--color-text-muted); }
+
+.stat-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+}
+.stat-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-card);
+}
+.stat-tile-label { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--color-text-muted); }
+.stat-tile-value { font-size: 1.7rem; font-weight: 800; line-height: 1.1; color: var(--color-text); font-variant-numeric: tabular-nums; }
+.stat-tile-value small { margin-left: 2px; font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted); }
+.stat-tile-sub { font-size: 0.72rem; color: var(--color-text-muted); }
+.stat-tile-live { border-color: rgba(34, 197, 94, 0.45); }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); animation: live-pulse 1.8s infinite; }
+@keyframes live-pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55); } 70% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+.delta-up { color: #4ade80; font-weight: 700; }
+.delta-down { color: #ff6b6b; font-weight: 700; }
+
+.stats-card {
+    margin-bottom: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-card);
+    min-width: 0;
+}
+.stats-card-title { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 0 0 2px; font-size: 1rem; }
+.stats-card-sub { margin: 0 0 var(--space-2); font-size: 0.75rem; color: var(--color-text-muted); }
+.stats-grid { display: grid; grid-template-columns: 1fr; gap: 0 var(--space-3); }
+@media (min-width: 900px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+
+/* 일별 방문자 세로 막대: 한 가지 색(보라, 진영과 무관한 사이트 전체 지표), 얇은 막대, 격자선은 은은하게 */
+/* 차트는 글자 크기가 너무 작아지거나 커지지 않게 폭을 560~900px 사이로 유지, 좁은 화면에서는 옆으로 밀어서 보기 */
+.visit-chart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.visit-chart svg { display: block; width: 100%; min-width: 560px; max-width: 900px; height: auto; margin: 0 auto; overflow: visible; }
+.chart-grid { stroke: var(--color-border); stroke-width: 1; }
+.chart-axis { stroke: #3a4150; stroke-width: 1; }
+.chart-tick { fill: var(--color-text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart-bar { fill: var(--color-purple); }
+.chart-col.is-today .chart-bar { fill: #a78bfa; }
+.chart-hit { fill: transparent; }
+.chart-col:hover .chart-hit { fill: rgba(255, 255, 255, 0.04); }
+.chart-col:hover .chart-bar { fill: #a78bfa; }
+
+/* 가로 막대 목록 (유입 경로, 인기 페이지) */
+.stats-card .hbar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.hbar-row { display: grid; grid-template-columns: minmax(0, 11em) 1fr auto; align-items: center; gap: 10px; font-size: 0.82rem; }
+.hbar-list-pages .hbar-row { grid-template-columns: minmax(0, 1.3fr) 1fr auto; }
+.hbar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text); text-decoration: none; }
+a.hbar-label:hover { text-decoration: underline; }
+.hbar-track { height: 10px; border-radius: 999px; background: var(--color-bg-elevated); overflow: hidden; }
+.hbar-fill { display: block; height: 100%; min-width: 2px; border-radius: 0 999px 999px 0; background: var(--color-purple); }
+.hbar-value { min-width: 2.5em; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* 보수 vs 진보 비교 */
+.party-legend { display: flex; gap: var(--space-3); margin: 4px 0 var(--space-2); font-size: 0.75rem; color: var(--color-text-muted); }
+.legend-swatch { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 3px; vertical-align: -1px; }
+.legend-conservative { background: var(--color-red); }
+.legend-democrat { background: var(--color-blue); }
+.stats-card .party-compare { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.party-compare-row { display: grid; grid-template-columns: minmax(0, 9em) 3em 1fr 3em; align-items: center; gap: 10px; font-size: 0.82rem; }
+.party-compare-label { color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.party-compare-num { font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
+.party-compare-num-right { text-align: left; }
+.party-compare-bar { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; background: var(--color-bg-elevated); }
+.party-compare-bar.is-empty { opacity: 0.5; }
+.pcb-fill { display: block; height: 100%; }
+.pcb-conservative { background: var(--color-red); }
+.pcb-democrat { background: var(--color-blue); }
+
+.stats-table { min-width: 0; }
+.stats-table td, .stats-table th { text-align: right; font-variant-numeric: tabular-nums; }
+.stats-table th[scope="row"], .stats-table thead th:first-child { text-align: left; }
+.stats-table thead th { text-align: center; }
+.stats-table tr.is-today td, .stats-table tr.is-today th { background: rgba(139, 92, 246, 0.1); }
+.stats-table small { color: var(--color-text-muted); font-weight: 400; }
+.stats-footnote { margin-top: var(--space-2); line-height: 1.7; }
+
+@media (max-width: 480px) {
+    .party-compare-row { grid-template-columns: minmax(0, 6.5em) 2.4em 1fr 2.4em; gap: 6px; font-size: 0.76rem; }
+    .hbar-row { grid-template-columns: minmax(0, 7em) 1fr auto; }
+    .stat-tile-value { font-size: 1.4rem; }
+}

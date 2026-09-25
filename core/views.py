@@ -311,3 +311,18 @@ def robots_txt(request):
         '',
     ]
     return HttpResponse('\n'.join(lines), content_type='text/plain; charset=utf-8')
+
+
+def stats_dashboard(request):
+    """관리자 전용 접속·활동 통계 (2026-09-25). 데이터 계산은 core/stats.py."""
+    from django.contrib.admin.views.decorators import staff_member_required
+
+    @staff_member_required(login_url='login')
+    def _view(request):
+        from .stats import build_stats
+
+        context = build_stats()
+        context['page_title'] = '통계 대시보드 | 독존'
+        return render(request, 'core/stats.html', context)
+
+    return _view(request)

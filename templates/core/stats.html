@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+{# 2026-09-25: 관리자 전용 통계 대시보드. 데이터는 core/stats.py, 방문 기록은 core/middleware.py #}
+<article class="stats-page">
+    <header class="stats-header">
+        <div>
+            <p class="policy-kicker">ADMIN · 관리자 전용</p>
+            <h1>통계 대시보드</h1>
+        </div>
+        <p class="stats-updated">{{ generated_at|date:"Y.m.d H:i" }} 기준 · <a href="{% url 'core:stats' %}">새로고침</a> · <a href="{% url 'admin:index' %}">관리자 페이지</a></p>
+    </header>
+
+    {# ---------- 핵심 숫자 ---------- #}
+    <section class="stat-tiles" aria-label="핵심 지표">
+        <div class="stat-tile stat-tile-live">
+            <span class="stat-tile-label"><span class="live-dot" aria-hidden="true"></span>지금 접속 중</span>
+            <strong class="stat-tile-value">{{ realtime|intcomma }}<small>명</small></strong>
+            <span class="stat-tile-sub">최근 {{ realtime_minutes }}분 안에 활동</span>
+        </div>
+        <div class="stat-tile">
+            <span class="stat-tile-label">오늘 방문자</span>
+            <strong class="stat-tile-value">{{ today_visitors|intcomma }}<small>명</small></strong>
+            <span class="stat-tile-sub">
+                어제 {{ yesterday_visitors|intcomma }}명 ·
+                {% if visitor_delta > 0 %}<span class="delta-up">▲ {{ visitor_delta }}</span>{% elif visitor_delta < 0 %}<span class="delta-down">▼ {{ visitor_delta|stringformat:"d"|slice:"1:" }}</span>{% else %}변동 없음{% endif %}
+            </span>
+        </div>
+        <div class="stat-tile">
+            <span class="stat-tile-label">오늘 페이지뷰</span>
+            <strong class="stat-tile-value">{{ today_pageviews|intcomma }}<small>회</small></strong>
+            <span class="stat-tile-sub">어제 {{ yesterday_pageviews|intcomma }}회</span>
+        </div>
+        <div class="stat-tile">
+            <span class="stat-tile-label">최근 7일 방문자</span>
+            <strong class="stat-tile-value">{{ week_visitors|intcomma }}<small>명</small></strong>
+            <span class="stat-tile-sub">페이지뷰 {{ week_pageviews|intcomma }}회</span>
+        </div>
+        <div class="stat-tile">
+            <span class="stat-tile-label">오늘 방문 구성</span>
+            <strong class="stat-tile-value">{{ today_members|intcomma }}<small> / {{ today_guests|intcomma }}</small></strong>
+            <span class="stat-tile-sub">회원 / 비회원 · 모바일 {{ today_mobile_pct }}%</span>
+        </div>
+        <div class="stat-tile">
+            <span class="stat-tile-label">전체 회원</span>
+            <strong class="stat-tile-value">{{ total_members|intcomma }}<small>명</small></strong>
+            <span class="stat-tile-sub">오늘 가입 {{ today_signups }}명</span>
+        </div>
+    </section>
+
+    {# ---------- 일별 방문자 차트 ---------- #}
+    <section class="stats-card" aria-labelledby="visit-chart-title">
+        <h2 id="visit-chart-title" class="stats-card-title">최근 {{ chart_days }}일 방문자</h2>
+        <p class="stats-card-sub">하루 동안 사이트를 본 사람 수(순방문자). 막대에 마우스를 올리면 페이지뷰도 보입니다.</p>
+        <div class="visit-chart">
+            <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="최근 {{ chart_days }}일 일별 방문자 수 막대 그래프">
+                {% for t in chart.ticks %}
+                <line x1="{{ chart.left }}" x2="{{ chart.right }}" y1="{{ t.y|floatformat:1 }}" y2="{{ t.y|floatformat:1 }}" class="chart-grid"/>
+                <text x="{{ chart.left|add:'-6' }}" y="{{ t.y|floatformat:1 }}" class="chart-tick" text-anchor="end" dominant-baseline="middle">{{ t.value|intcomma }}</text>
+                {% endfor %}
+                {% for b in chart.bars %}
+                <g class="chart-col{% if b.is_today %} is-today{% endif %}">
+                    <rect x="{{ b.hit_x|floatformat:1 }}" y="{{ chart.top }}" width="{{ b.hit_w|floatformat:1 }}" height="{{ chart.plot_h }}" class="chart-hit"/>
+                    {% if b.path %}<path d="{{ b.path }}" class="chart-bar"/>{% endif %}
+                    <title>{{ b.label }}({{ b.weekday }}) 방문자 {{ b.value|intcomma }}명 · 페이지뷰 {{ b.extra|intcomma }}회</title>
+                </g>
+                {% endfor %}
+                <line x1="{{ chart.left }}" x2="{{ chart.right }}" y1="{{ chart.baseline }}" y2="{{ chart.baseline }}" class="chart-axis"/>
+                {% for l in chart.x_labels %}
+                <text x="{{ l.x|floatformat:1 }}" y="{{ chart.label_y }}" class="chart-tick" text-anchor="middle">{{ l.text }}</text>
+                {% endfor %}
+            </svg>
+        </div>
+    </section>
+
+    <div class="stats-grid">
+        {# ---------- 유입 경로 ---------- #}
+        <section class="stats-card" aria-labelledby="source-title">
+            <h2 id="source-title" class="stats-card-title">어디서 들어왔나 <span class="card-period">최근 7일</span></h2>
+            <p class="stats-card-sub">그날 처음 들어온 경로 기준 (방문자 수)</p>
+            {% if sources %}
+            <ul class="hbar-list">
+                {% for s in sources %}
+                <li class="hbar-row">
+                    <span class="hbar-label">{{ s.source }}</span>
+                    <span class="hbar-track"><span class="hbar-fill" style="width: {{ s.pct }}%;"></span></span>
+                    <span class="hbar-value">{{ s.n|intcomma }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}<p class="main-card-empty">아직 방문 기록이 없습니다.</p>{% endif %}
+        </section>
+
+        {# ---------- 인기 페이지 ---------- #}
+        <section class="stats-card" aria-labelledby="pages-title">
+            <h2 id="pages-title" class="stats-card-title">많이 본 페이지 <span class="card-period">최근 7일</span></h2>
+            <p class="stats-card-sub">페이지뷰 기준 TOP 10</p>
+            {% if top_pages %}
+            <ol class="hbar-list hbar-list-pages">
+                {% for p in top_pages %}
+                <li class="hbar-row">
+                    <a class="hbar-label" href="{{ p.path }}" title="{{ p.path }}">{{ p.title }}</a>
+                    <span class="hbar-track"><span class="hbar-fill" style="width: {{ p.pct }}%;"></span></span>
+                    <span class="hbar-value">{{ p.n|intcomma }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+            {% else %}<p class="main-card-empty">아직 방문 기록이 없습니다.</p>{% endif %}
+        </section>
+    </div>
+
+    {# ---------- 진영 비교 ---------- #}
+    <section class="stats-card" aria-labelledby="party-title">
+        <h2 id="party-title" class="stats-card-title">보수 vs 진보</h2>
+        <div class="party-legend" aria-hidden="true">
+            <span><span class="legend-swatch legend-conservative"></span>보수</span>
+            <span><span class="legend-swatch legend-democrat"></span>진보</span>
+        </div>
+        <ul class="party-compare">
+            {% for r in party_rows %}
+            <li class="party-compare-row">
+                <span class="party-compare-label">{{ r.label }}</span>
+                <span class="party-compare-num">{{ r.conservative|intcomma }}</span>
+                <span class="party-compare-bar{% if r.empty %} is-empty{% endif %}" title="보수 {{ r.conservative }} · 진보 {{ r.democrat }}">
+                    {% if not r.empty %}
+                    {% if r.conservative %}<span class="pcb-fill pcb-conservative" style="width: {{ r.c_pct }}%;"></span>{% endif %}
+                    {% if r.democrat %}<span class="pcb-fill pcb-democrat" style="width: {{ r.d_pct }}%;"></span>{% endif %}
+                    {% endif %}
+                </span>
+                <span class="party-compare-num party-compare-num-right">{{ r.democrat|intcomma }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <div class="stats-grid">
+        {# ---------- 최근 14일 활동 표 ---------- #}
+        <section class="stats-card" aria-labelledby="activity-title">
+            <h2 id="activity-title" class="stats-card-title">최근 14일 활동</h2>
+            <div class="policy-table-wrap">
+            <table class="policy-table stats-table">
+                <thead><tr><th scope="col">날짜</th><th scope="col">방문자</th><th scope="col">페이지뷰</th><th scope="col">가입</th><th scope="col">글</th><th scope="col">댓글</th><th scope="col">일기토</th></tr></thead>
+                <tbody>
+                    {% for a in activity %}
+                    <tr{% if forloop.first %} class="is-today"{% endif %}>
+                        <th scope="row">{{ a.date|date:"m/d" }}{% if forloop.first %} <small>오늘</small>{% endif %}</th>
+                        <td>{{ a.visitors|intcomma }}</td><td>{{ a.pageviews|intcomma }}</td><td>{{ a.signups }}</td>
+                        <td>{{ a.posts }}</td><td>{{ a.comments }}</td><td>{{ a.duels }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </section>
+
+        {# ---------- 회원 구성 ---------- #}
+        <section class="stats-card" aria-labelledby="age-title">
+            <h2 id="age-title" class="stats-card-title">회원 구성 <span class="card-period">나이대 × 진영 · 성별</span></h2>
+            {% if age_rows %}
+            <div class="policy-table-wrap">
+            <table class="policy-table stats-table">
+                <thead>
+                    <tr><th scope="col" rowspan="2">나이대</th><th scope="colgroup" colspan="2"><span class="legend-swatch legend-conservative"></span>보수</th><th scope="colgroup" colspan="2"><span class="legend-swatch legend-democrat"></span>진보</th><th scope="col" rowspan="2">합계</th></tr>
+                    <tr><th scope="col">남</th><th scope="col">여</th><th scope="col">남</th><th scope="col">여</th></tr>
+                </thead>
+                <tbody>
+                    {% for r in age_rows %}
+                    <tr><th scope="row">{{ r.age }}</th><td>{{ r.c_m }}</td><td>{{ r.c_f }}</td><td>{{ r.d_m }}</td><td>{{ r.d_f }}</td><td><strong>{{ r.total }}</strong></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% else %}<p class="main-card-empty">아직 회원이 없습니다.</p>{% endif %}
+        </section>
+    </div>
+
+    <p class="policy-note stats-footnote">
+        · 방문자는 "같은 날 같은 기기·브라우저"를 1명으로 셉니다. IP 원문은 저장하지 않고 날짜마다 바뀌는 암호화 값만 저장합니다.<br>
+        · 검색엔진 로봇과 관리자(운영자) 본인의 방문은 세지 않습니다. 방문 기록은 약 13개월 뒤 자동 삭제됩니다.<br>
+        · 이 기능을 설치한 날부터 집계되므로 그 이전 방문자 수는 없습니다.
+    </p>
+</article>
+{% endblock %}
