@@ -27,12 +27,12 @@
         <h2>1. 게시판 안내</h2>
         <div class="policy-table-wrap">
         <table class="policy-table">
-            <thead><tr><th scope="col">게시판</th><th scope="col">읽기</th><th scope="col">글·댓글 쓰기</th><th scope="col">특징</th></tr></thead>
+            <thead><tr><th scope="col">게시판</th><th scope="col">읽기</th><th scope="col">글쓰기</th><th scope="col">댓글</th><th scope="col">특징</th></tr></thead>
             <tbody>
-                <tr><th scope="row"><span class="party-dot party-dot-red" aria-hidden="true"></span>보수 아레나</th><td class="nowrap">누구나</td><td><strong>보수</strong>로 가입한 회원만</td><td>글쓴이의 성별·나이대 표시, 진보 회원은 글에 1:1 일기토 신청 가능</td></tr>
-                <tr><th scope="row"><span class="party-dot party-dot-blue" aria-hidden="true"></span>민주 아레나</th><td class="nowrap">누구나</td><td><strong>진보</strong>로 가입한 회원만</td><td>글쓴이의 성별·나이대 표시, 보수 회원은 글에 1:1 일기토 신청 가능</td></tr>
-                <tr><th scope="row"><span class="party-dot party-dot-purple" aria-hidden="true"></span>일기토</th><td class="nowrap">누구나</td><td>토론은 두 당사자만, 투표는 회원 누구나</td><td>자세한 내용은 <a href="{% url 'core:duel_rules' %}">1:1 일기토 규칙</a></td></tr>
-                <tr><th scope="row"><span class="party-dot party-dot-teal" aria-hidden="true"></span>자유</th><td class="nowrap">누구나</td><td>회원 누구나</td><td>진영 상관없이 자유로운 이야기</td></tr>
+                <tr><th scope="row"><span class="party-dot party-dot-red" aria-hidden="true"></span>보수 아레나</th><td class="nowrap">누구나</td><td><strong>보수</strong>로 가입한 회원만</td><td class="nowrap">회원 누구나</td><td>글쓴이의 성별·나이대 표시, 진보 회원은 글에 1:1 일기토 신청 가능</td></tr>
+                <tr><th scope="row"><span class="party-dot party-dot-blue" aria-hidden="true"></span>민주 아레나</th><td class="nowrap">누구나</td><td><strong>진보</strong>로 가입한 회원만</td><td class="nowrap">회원 누구나</td><td>글쓴이의 성별·나이대 표시, 보수 회원은 글에 1:1 일기토 신청 가능</td></tr>
+                <tr><th scope="row"><span class="party-dot party-dot-purple" aria-hidden="true"></span>일기토</th><td class="nowrap">누구나</td><td>토론 글은 두 당사자만</td><td>투표는 회원 누구나</td><td>자세한 내용은 <a href="{% url 'core:duel_rules' %}">1:1 일기토 규칙</a></td></tr>
+                <tr><th scope="row"><span class="party-dot party-dot-teal" aria-hidden="true"></span>자유</th><td class="nowrap">누구나</td><td>회원 누구나</td><td class="nowrap">회원 누구나</td><td>진영 상관없이 자유로운 이야기</td></tr>
             </tbody>
         </table>
         </div>

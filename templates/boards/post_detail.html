@@ -73,14 +73,13 @@
     <section class="post-comments" aria-labelledby="comments-heading">
         <h2 id="comments-heading" class="post-comments-heading">댓글 {{ comment_count }}</h2>
 
-        {% if can_write %}
+        {# 2026-09-25: 댓글은 진영 상관없이 로그인한 회원 누구나 #}
+        {% if request.user.is_authenticated %}
         <form action="{% url 'boards:comment_add' board.slug post.pk %}" method="post" class="comment-form">
             {% csrf_token %}
             {{ comment_form.content }}
             <button type="submit" class="btn btn-primary">댓글 등록</button>
         </form>
-        {% elif request.user.is_authenticated %}
-        <p class="comment-login-notice">{{ party_only_message }}</p>
         {% else %}
         <p class="comment-login-notice"><a href="{% url 'login' %}">로그인</a> 후 댓글을 남길 수 있습니다.</p>
         {% endif %}

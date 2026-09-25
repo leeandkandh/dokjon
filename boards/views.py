@@ -58,7 +58,8 @@ def _save_post_images(post, files):
 
 # 2026-09-24 요청: 진영 전용 게시판.
 # 게시판 slug가 진영 값(conservative/democrat)과 같으면, 그 진영으로 가입한 회원만
-# 글쓰기/댓글쓰기를 할 수 있습니다. (읽기와 추천은 누구나 가능, 관리자는 예외로 허용)
+# 글쓰기를 할 수 있습니다. (읽기·추천·댓글은 누구나 가능, 관리자는 예외로 허용)
+# 2026-09-25 변경: 댓글은 진영 상관없이 로그인한 회원 누구나 쓸 수 있게 풀었습니다.
 PARTY_BOARD_SLUGS = {value for value, _label in PARTY_CHOICES}
 PARTY_LABELS = dict(PARTY_CHOICES)
 
@@ -68,7 +69,7 @@ HOT_POSTS_DAYS = 7
 
 
 def can_write_in_board(user, board):
-    """user가 board에 글/댓글을 쓸 수 있는지 여부."""
+    """user가 board에 "글"을 쓸 수 있는지 여부. (댓글은 로그인만 하면 누구나 가능)"""
     if not user.is_authenticated:
         return False
     if board.slug not in PARTY_BOARD_SLUGS or user.is_staff:
@@ -77,7 +78,7 @@ def can_write_in_board(user, board):
 
 
 def party_only_message(board):
-    return f'{board.name}에는 회원가입 때 [{PARTY_LABELS[board.slug]}] 진영을 선택한 회원만 글과 댓글을 쓸 수 있습니다.'
+    return f'{board.name}에는 회원가입 때 [{PARTY_LABELS[board.slug]}] 진영을 선택한 회원만 글을 쓸 수 있습니다. (댓글은 누구나 가능)'
 
 
 def _get_board_or_404(slug):
@@ -172,7 +173,6 @@ def post_detail(request, slug, pk):
         # 2026-09-24: 1:1 일기토 신청 버튼 / 이 글에 진행중인 일기토
         'can_challenge': can_challenge_post(request.user, post),
         'active_duel': active_duel_for_post(post) if board.slug in PARTY_BOARD_SLUGS else None,
-        'party_only_message': party_only_message(board) if board.slug in PARTY_BOARD_SLUGS else '',
         'page_title': f'{post.title} - {board.name} - 독존',
         # content는 이제 HTML이라, meta description용으로는 태그를 뗀 순수 텍스트만 사용
         'meta_description': strip_tags(post.content)[:100],
@@ -315,10 +315,7 @@ def comment_add(request, slug, pk):
     board = _get_board_or_404(slug)
     post = get_object_or_404(Post, pk=pk, board=board)
 
-    if not can_write_in_board(request.user, board):
-        messages.error(request, party_only_message(board))
-        return redirect('boards:post_detail', slug=board.slug, pk=post.pk)
-
+    # 2026-09-25: 댓글은 진영 제한 없음 (로그인은 @login_required로 이미 확인)
     form = CommentForm(request.POST)
     if form.is_valid():
         Comment.objects.create(post=post, author=request.user, content=form.cleaned_data['content'])
