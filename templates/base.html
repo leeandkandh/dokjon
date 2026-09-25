@@ -23,12 +23,12 @@
 <meta property="og:title" content="{% block og_title %}{{ page_title|default:default_title }}{% endblock %}">
 <meta property="og:description" content="{% block og_description %}{{ meta_description|default:default_description }}{% endblock %}">
 <meta property="og:url" content="{{ canonical_url }}">
-<meta property="og:image" content="{% if og_image_url %}{{ og_image_url }}{% else %}{{ site_base_url }}{% static 'images/20260922_main.png' %}{% endif %}">
+<meta property="og:image" content="{% if og_image_url %}{{ og_image_url }}{% else %}{{ site_base_url }}{% static 'images/20260925_main.jpg' %}{% endif %}">
 <meta property="og:image:alt" content="독존 - 보수 vs 진보 정치 토론 커뮤니티">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ page_title|default:default_title }}">
 <meta name="twitter:description" content="{{ meta_description|default:default_description }}">
-<meta name="twitter:image" content="{% if og_image_url %}{{ og_image_url }}{% else %}{{ site_base_url }}{% static 'images/20260922_main.png' %}{% endif %}">
+<meta name="twitter:image" content="{% if og_image_url %}{{ og_image_url }}{% else %}{{ site_base_url }}{% static 'images/20260925_main.jpg' %}{% endif %}">
 {% block extra_meta %}{% endblock %}
 {% endblock %}
 

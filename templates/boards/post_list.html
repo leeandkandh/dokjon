@@ -18,7 +18,7 @@
     <h2 id="hot-board-heading" class="hot-board-title"><span class="hot-board-flame" aria-hidden="true">🔥</span>화력 BEST {{ hot_posts_count }}<span class="hot-board-period">최근 {{ hot_posts_days }}일</span></h2>
     <ol class="hot-list">
         {% for post in hot_posts %}
-        <li class="hot-item{% if forloop.counter <= 3 %} hot-item-top{% endif %}">
+        <li class="hot-item{% if forloop.counter <= 3 %} hot-item-top{% endif %}{% if post.author.is_top_rank %} hot-item-dokjon{% endif %}">
             <a href="{% url 'boards:post_detail' board.slug post.pk %}" class="hot-item-link">
                 <span class="hot-rank hot-rank-{{ forloop.counter }}">{{ forloop.counter }}</span>
                 <span class="hot-item-body">
@@ -43,12 +43,14 @@
 <ul class="post-card-list">
     <li class="sr-only post-card-list-caption">{{ board.name }} 게시판 글 목록</li>
     {% for post in page_obj %}
-    <li class="post-card">
+    {# 2026-09-25: 최고 등급 "독존" 회원의 글은 황금빛으로 빛나는 특별 게시물로 표시 #}
+    <li class="post-card{% if post.author.is_top_rank %} post-card-dokjon{% endif %}">
         <a href="{% url 'boards:post_detail' board.slug post.pk %}" class="post-card-link">
             {% if post.thumbnail_url %}
             <img src="{{ post.thumbnail_url }}" alt="" class="post-card-thumb" loading="lazy">
             {% endif %}
             <div class="post-card-body">
+                {% if post.author.is_top_rank %}<span class="dokjon-post-ribbon"><span aria-hidden="true">👑</span> 독존의 글</span>{% endif %}
                 <h2 class="post-card-title">{{ post.title }}</h2>
                 <div class="post-card-meta">
                     <span class="author-badge">

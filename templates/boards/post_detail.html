@@ -12,9 +12,10 @@
 {% endblock %}
 
 {% block content %}
-<article class="post-detail">
+<article class="post-detail{% if post.author.is_top_rank %} post-detail-dokjon{% endif %}">
     <header class="post-detail-header">
         <p class="post-detail-board"><a href="{% url 'boards:post_list' board.slug %}">{{ board.name }}</a></p>
+        {% if post.author.is_top_rank %}<p class="dokjon-post-ribbon dokjon-post-ribbon-lg"><span aria-hidden="true">👑</span> 최고 등급 독존의 글</p>{% endif %}
         <h1 class="post-detail-title">{{ post.title }}</h1>
         <div class="post-detail-meta">
             <span class="author-badge">
